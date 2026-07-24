@@ -1,0 +1,92 @@
+body{
+  margin: 0;
+  background: #0B1220;
+}
+
+.pp-page{
+  --pp-bg: #0B1220;
+  --pp-panel: #101A2E;
+  --pp-border: #1E2A44;
+  --pp-text: #E7ECF5;
+  --pp-muted: #7C8AA8;
+  --pp-signal: #2FD48F;
+  --pp-signal-dim: rgba(47, 212, 143, 0.16);
+
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0) 0 0/28px 28px,
+    var(--pp-bg);
+  color: var(--pp-text);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+.pp-card{ width: 100%; max-width: 380px; text-align: center; }
+
+.pp-mark{
+  position: relative;
+  width: 88px; height: 88px;
+  margin: 0 auto 28px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pp-ring{
+  position: absolute; inset: 0;
+  border-radius: 50%;
+  border: 1px solid var(--pp-signal);
+  opacity: 0;
+  animation: pp-ping 2.8s cubic-bezier(0.2,0.6,0.4,1) infinite;
+}
+.pp-ring.r2{ animation-delay: 0.9s; }
+.pp-ring.r3{ animation-delay: 1.8s; }
+@keyframes pp-ping{
+  0%{ transform: scale(0.55); opacity: 0.55; }
+  100%{ transform: scale(1.35); opacity: 0; }
+}
+.pp-dot{
+  width: 40px; height: 40px;
+  border-radius: 50%;
+  background: var(--pp-signal-dim);
+  display: flex; align-items: center; justify-content: center;
+}
+.pp-dot::after{
+  content: '';
+  width: 12px; height: 12px;
+  border-radius: 50%;
+  background: var(--pp-signal);
+  box-shadow: 0 0 12px 2px rgba(47,212,143,0.55);
+}
+.pp-logo-img{ width: 40px; height: 40px; border-radius: 50%; }
+
+.pp-card h1{
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 600;
+  font-size: 28px;
+  letter-spacing: -0.02em;
+  margin: 0 0 8px;
+  color: var(--pp-text);
+}
+.pp-card p.pp-tagline{ color: var(--pp-muted); font-size: 14.5px; margin: 0 0 36px; }
+
+.pp-actions{ display: flex; flex-direction: column; gap: 10px; }
+.pp-btn{
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--pp-border);
+  background: var(--pp-panel);
+  color: var(--pp-text);
+  font-size: 14.5px; font-weight: 500;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  text-decoration: none;
+  transition: border-color .15s ease, background .15s ease;
+}
+.pp-btn:hover{ border-color: #324063; background: #132038; color: var(--pp-text); }
+.pp-btn svg{ flex-shrink: 0; }
+.pp-btn span{ margin: 0 auto; padding-right: 20px; }
+
+.pp-footnote{ margin-top: 28px; font-size: 12.5px; color: var(--pp-muted); }
+.pp-footnote .pp-sep{ margin: 0 8px; opacity: .5; }

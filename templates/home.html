@@ -5,28 +5,43 @@
 
 {% block content %}
 
-<div class="container text-center mt-5">
 
-<img src="{% static 'favicon.png' %}" alt="PingPilot" width="64" height="64" class="mb-2">
-<h1>PingPilot</h1>
+<div class="pp-page">
+  <div class="pp-card">
 
-<p>Monitoring Made Simple</p>
+    <div class="pp-mark">
+      <div class="pp-ring r1"></div>
+      <div class="pp-ring r2"></div>
+      <div class="pp-ring r3"></div>
+      <img src="{% static 'favicon.png' %}" alt="PingPilot" class="pp-logo-img">
+    </div>
 
+    <h1>PingPilot</h1>
+    <p class="pp-tagline">Monitoring made simple</p>
 
-<div class="d-grid gap-3 col-4 mx-auto">
+    <div class="pp-actions">
+      <a href="{% provider_login_url 'google' %}" class="pp-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18"><path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.7-1.57 2.68-3.88 2.68-6.62z"/><path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.95v2.33A9 9 0 0 0 9 18z"/><path fill="#FBBC05" d="M3.97 10.71A5.4 5.4 0 0 1 3.68 9c0-.59.1-1.17.29-1.71V4.96H.95A9 9 0 0 0 0 9c0 1.45.35 2.83.95 4.04l3.02-2.33z"/><path fill="#EA4335" d="M9 3.58c1.32 0 2.51.46 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0A9 9 0 0 0 .95 4.96l3.02 2.33C4.68 5.16 6.66 3.58 9 3.58z"/></svg>
+        <span>Continue with Google</span>
+      </a>
+      <a href="{% provider_login_url 'github' %}" class="pp-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" fill="#E7ECF5"><path d="M9 0C4.03 0 0 4.13 0 9.22c0 4.07 2.58 7.52 6.16 8.74.45.09.62-.2.62-.45 0-.22-.01-.94-.01-1.71-2.26.42-2.84-.56-3.02-1.08-.1-.26-.54-1.08-.92-1.3-.32-.17-.77-.6-.01-.61.71-.01 1.22.67 1.39.94.81 1.39 2.11 1 2.63.76.08-.6.32-1 .58-1.24-2.03-.23-4.15-1.03-4.15-4.6 0-1.02.36-1.85.94-2.5-.09-.24-.41-1.19.09-2.48 0 0 .77-.25 2.53.96a8.6 8.6 0 0 1 4.6 0c1.76-1.21 2.53-.96 2.53-.96.5 1.29.18 2.24.09 2.48.58.65.94 1.47.94 2.5 0 3.58-2.13 4.37-4.16 4.6.33.29.62.86.62 1.75 0 1.26-.01 2.28-.01 2.59 0 .25.17.55.62.45A9.24 9.24 0 0 0 18 9.22C18 4.13 13.97 0 9 0z"/></svg>
+        <span>Continue with GitHub</span>
+      </a>
+      <a href="{% provider_login_url 'gitlab' %}" class="pp-btn">
+  <svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+    <path fill="#E24329" d="M23.6 9.6l-2.3-7.1a.8.8 0 0 0-1.5 0l-1.5 4.6H5.7L4.2 2.5a.8.8 0 0 0-1.5 0L.4 9.6a1 1 0 0 0 .4 1.1L12 21.5l11.2-10.8a1 1 0 0 0 .4-1.1z"/>
+    <path fill="#FC6D26" d="M12 21.5L18.3 7.1H5.7L12 21.5z"/>
+    <path fill="#FCA326" d="M5.7 7.1H2.2L12 21.5 5.7 7.1z"/>
+    <path fill="#FCA326" d="M18.3 7.1h3.5L12 21.5l6.3-14.4z"/>
+  </svg>
+  <span>Continue with GitLab</span>
+</a>
+      
+    </div>
 
-    <a href="{% provider_login_url 'google' %}"
-       class="btn btn-dark">
-        Continue with Google
-    </a>
-
-    <a href="{% provider_login_url 'github' %}"
-       class="btn btn-dark">
-        Continue with GitHub
-    </a>
-
-</div>
-
+    <p class="pp-footnote">Secure sign-in<span class="pp-sep"></p>
+  </div>
 </div>
 
 {% endblock %}

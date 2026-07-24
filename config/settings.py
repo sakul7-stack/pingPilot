@@ -49,12 +49,14 @@ INSTALLED_APPS = [
 
 'allauth.socialaccount.providers.google',
  "allauth.socialaccount.providers.github",
+ "allauth.socialaccount.providers.gitlab",
 
 'django_htmx',
 
 'accounts',
 'dashboard',
 'core',
+'heartbeat',
 ]
 
 MIDDLEWARE = [
@@ -164,9 +166,18 @@ SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'SCOPE': ['profile', 'email'],
         'AUTH_PARAMS': {'access_type': 'online'},
-    }
+    },
+    "gitlab": {
+        "SCOPE": [
+            "read_user",
+            "openid",
+            "profile",
+            "email",
+        ],
+    },
 }
 
+ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_UNIQUE_EMAIL = True
