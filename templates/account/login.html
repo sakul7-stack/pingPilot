@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% load socialaccount %}
+
+{% block content %}
+
+<div class="container text-center mt-5">
+    <h1>PingPilot</h1>
+    <p>Monitoring Made Simple</p>
+
+    <div class="d-grid gap-3 col-4 mx-auto mt-4">
+        <a href="{% provider_login_url 'google' %}"
+           class="btn btn-dark">
+            Continue with Google
+        </a>
+
+        <a href="{% provider_login_url 'github' %}"
+           class="btn btn-dark">
+            Continue with GitHub
+        </a>
+    </div>
+</div>
+
+{% endblock %}
