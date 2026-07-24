@@ -71,3 +71,7 @@ media/
 # Django migrations (optional)
 # **/migrations/*
 # !**/migrations/__init__.py
+
+
+guide.md 
+proposal.md
