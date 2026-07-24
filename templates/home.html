@@ -1,14 +1,17 @@
 {% extends "base.html" %}
 
 {% load socialaccount %}
+{% load static %}
 
 {% block content %}
 
 <div class="container text-center mt-5">
 
+<img src="{% static 'favicon.png' %}" alt="PingPilot" width="64" height="64" class="mb-2">
 <h1>PingPilot</h1>
 
 <p>Monitoring Made Simple</p>
+
 
 <div class="d-grid gap-3 col-4 mx-auto">
 
