@@ -73,5 +73,5 @@ media/
 # !**/migrations/__init__.py
 
 
-guide.md 
-proposal.md
+/guide.md 
+/proposal.md
