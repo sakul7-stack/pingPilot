@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4" style="max-width:600px;">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Edit Monitor</li>
+    </ol>
+  </nav>
+
+  <h2 class="mb-4">Edit Monitor</h2>
+
+  <form method="post">
+    {% csrf_token %}
+
+    <div class="card mb-3 border-white">
+      <div class="card-body">
+        <div class="mb-3">
+          <label class="form-label">Name</label>
+          <input type="text" name="name" class="form-control" value="{{ monitor.name }}" required>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">URL</label>
+          <input type="url" name="url" class="form-control" value="{{ monitor.url }}" required>
+        </div>
+        <div class="row">
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Method</label>
+            <select name="method" class="form-select">
+              <option value="GET" {% if monitor.method == "GET" %}selected{% endif %}>GET</option>
+              <option value="HEAD" {% if monitor.method == "HEAD" %}selected{% endif %}>HEAD</option>
+            </select>
+          </div>
+          <div class="col-md-6 mb-3">
+            <label class="form-label">Expected Status</label>
+            <input type="number" name="expected_status" class="form-control" value="{{ monitor.expected_status }}">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Expected Keyword <span class="text-muted">(optional)</span></label>
+          <input type="text" name="expected_keyword" class="form-control" value="{{ monitor.expected_keyword|default:'' }}">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Interval: <span id="intervalVal">{{ monitor.check_interval_seconds }}</span>s</label>
+          <input type="range" name="check_interval_seconds" class="form-range" value="{{ monitor.check_interval_seconds }}" min="180" max="86400" step="60" oninput="document.getElementById('intervalVal').textContent=this.value">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Timeout: <span id="timeoutVal">{{ monitor.timeout }}</span>s</label>
+          <input type="range" name="timeout" class="form-range" value="{{ monitor.timeout }}" min="1" max="30" step="1" oninput="document.getElementById('timeoutVal').textContent=this.value">
+        </div>
+      </div>
+    </div>
+
+    <div class="d-flex gap-2">
+      <button type="submit" class="btn btn-success flex-grow-1">Save Changes</button>
+      <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+{% endblock %}

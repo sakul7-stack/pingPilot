@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4" style="max-width:600px;">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Settings</li>
+    </ol>
+  </nav>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show">{{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="card mb-3 border-white">
+      <div class="card-header">Profile</div>
+      <div class="card-body text-center">
+        <label for="avatarInput" style="cursor:pointer;display:inline-block;position:relative;">
+          <div style="width:96px;height:96px;border-radius:50%;background:var(--pp-border);display:inline-flex;align-items:center;justify-content:center;font-size:36px;font-weight:600;color:var(--pp-text);margin-bottom:8px;border:3px solid var(--pp-signal);overflow:hidden;">
+            {% if profile.avatar %}
+              <img src="{{ profile.avatar.url }}" style="width:100%;height:100%;object-fit:cover;">
+            {% else %}
+              {{ user.first_name|first|upper|default:user.email|first|upper }}
+            {% endif %}
+          </div>
+          <div style="font-size:13px;color:var(--pp-signal);">Click to change photo</div>
+        </label>
+        <input id="avatarInput" type="file" name="avatar" accept="image/*" style="display:none;" onchange="this.form.submit()">
+        <h2 class="mt-2">{{ user.first_name|default:"User" }}</h2>
+      </div>
+    </div>
+
+    <div class="card mb-3 border-white">
+      <div class="card-header">Display Name</div>
+      <div class="card-body">
+        <input type="text" name="first_name" class="form-control" value="{{ user.first_name }}" placeholder="Your name">
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-success w-100 mb-3">Save Changes</button>
+  </form>
+
+  <form method="post" action="{% url 'account_logout' %}">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+  </form>
+</div>
+
+{% endblock %}

@@ -1,7 +1,157 @@
+:root{
+  --pp-bg: #2f2e34;
+  --pp-panel: #3a3940;
+  --pp-border: #4a4950;
+  --pp-text: #E7ECF5;
+  --pp-muted: #9a99a0;
+  --pp-signal: #1DB86D;
+  --pp-signal-dim: rgba(29, 184, 109, 0.16);
+  --pp-danger: #FF5C6C;
+  --pp-warning: #F5A623;
+}
+
 body{
   margin: 0;
-  background: #0B1220;
+  background: var(--pp-bg);
+  color: var(--pp-text);
+  font-family: 'Inter', system-ui, sans-serif;
 }
+
+a{ color: var(--pp-signal); }
+a:hover{ color: #4ae8a3; }
+
+.card{
+  background: var(--pp-panel);
+  border: 1px solid var(--pp-border);
+  color: var(--pp-text);
+}
+.card.border-white{ border-color: #fff !important; }
+.card-header{
+  background: rgba(255,255,255,0.03);
+  border-bottom: 1px solid var(--pp-border);
+  color: var(--pp-text);
+}
+.card-footer{
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid var(--pp-border);
+}
+
+.table{
+  --bs-table-bg: transparent;
+  --bs-table-color: var(--pp-text);
+  --bs-table-hover-bg: rgba(255,255,255,0.04);
+  --bs-table-hover-color: var(--pp-text);
+  --bs-table-striped-bg: rgba(255,255,255,0.02);
+  color: var(--pp-text);
+  border-color: var(--pp-border);
+}
+.table>:not(caption)>*>*{ border-bottom-color: var(--pp-border); }
+.table-dark{ --bs-table-bg: var(--pp-border); }
+
+.modal-content{
+  background: var(--pp-panel);
+  border: 1px solid var(--pp-border);
+  color: var(--pp-text);
+}
+.modal-header{
+  border-bottom: 1px solid var(--pp-border);
+}
+.modal-footer{
+  border-top: 1px solid var(--pp-border);
+}
+
+.form-control, .form-select{
+  background: #0B1220;
+  border: 1px solid var(--pp-border);
+  color: var(--pp-text);
+}
+.form-control:focus, .form-select:focus{
+  background: #0B1220;
+  border-color: var(--pp-signal);
+  color: var(--pp-text);
+  box-shadow: 0 0 0 0.2rem var(--pp-signal-dim);
+}
+.form-control::placeholder{ color: var(--pp-muted); }
+
+.btn-close{ filter: invert(1); }
+
+.card .fs-1{ color: var(--pp-text) !important; }
+
+.btn-success{
+  background: var(--pp-signal);
+  border-color: var(--pp-signal);
+  color: #0B1220;
+  font-weight: 600;
+}
+.btn-success:hover{
+  background: #28c07f;
+  border-color: #28c07f;
+}
+
+.btn-outline-secondary{
+  border-color: var(--pp-border);
+  color: var(--pp-muted);
+}
+.btn-outline-secondary:hover{
+  background: var(--pp-border);
+  color: var(--pp-text);
+}
+
+.dropdown-item{ color: var(--pp-text) !important; }
+.dropdown-item:hover{ background: #4a4950 !important; color: var(--pp-text) !important; }
+
+.btn-outline-info{
+  border-color: #5bc0de;
+  color: #5bc0de;
+}
+.btn-outline-info:hover{
+  background: #5bc0de;
+  color: #fff;
+}
+
+.btn-outline-warning{
+  border-color: var(--pp-warning);
+  color: var(--pp-warning);
+}
+.btn-outline-warning:hover{
+  background: var(--pp-warning);
+  color: #fff;
+}
+
+.btn-outline-danger{
+  border-color: var(--pp-danger);
+  color: var(--pp-danger);
+}
+.btn-outline-danger:hover{
+  background: var(--pp-danger);
+  color: #fff;
+}
+
+.badge.bg-success{ background: var(--pp-signal) !important; }
+.badge.bg-danger{ background: var(--pp-danger) !important; }
+.badge.bg-warning{ background: var(--pp-warning) !important; color: #0B1220; }
+.badge.bg-secondary{ background: #2A3656 !important; }
+.badge.bg-light{ background: var(--pp-panel) !important; }
+
+code{
+  color: #5fc9ff;
+  background: rgba(255,255,255,0.06);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.breadcrumb{ background: transparent; }
+.breadcrumb-item+.breadcrumb-item::before{ color: var(--pp-muted); }
+.breadcrumb-item.active{ color: var(--pp-muted); }
+.breadcrumb-item a{ color: var(--pp-signal); }
+
+.alert-dismissible .btn-close{ filter: invert(0.7); }
+
+.text-muted{ color: var(--pp-muted) !important; }
+.text-success{ color: var(--pp-signal) !important; }
+.text-danger{ color: var(--pp-danger) !important; }
+.text-warning{ color: var(--pp-warning) !important; }
+.text-secondary{ color: var(--pp-muted) !important; }
 
 .pp-page{
   --pp-bg: #0B1220;
@@ -9,8 +159,8 @@ body{
   --pp-border: #1E2A44;
   --pp-text: #E7ECF5;
   --pp-muted: #7C8AA8;
-  --pp-signal: #2FD48F;
-  --pp-signal-dim: rgba(47, 212, 143, 0.16);
+  --pp-signal: #1DB86D;
+  --pp-signal-dim: rgba(29, 184, 109, 0.16);
 
   min-height: 100vh;
   display: flex;

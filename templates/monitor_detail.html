@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">{{ monitor.name }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">{{ monitor.name }}</h2>
+    <div>
+      <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
+        {% if monitor.is_active %}Pause{% else %}Activate{% endif %}
+      </a>
+      <a href="{% url 'delete_monitor' monitor.id %}" class="btn btn-sm btn-outline-danger"
+         onclick="return confirm('Delete {{ monitor.name }}?')">Delete</a>
+    </div>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-1 fw-bold">
+          {% if not monitor.is_active %}
+            <span class="text-secondary">Paused</span>
+          {% elif monitor.last_status == "UP" %}
+            <span class="text-success">UP</span>
+          {% elif monitor.last_status == "DOWN" %}
+            <span class="text-danger">DOWN</span>
+          {% elif monitor.last_status == "DEGRADED" %}
+            <span class="text-warning">DEGRADED</span>
+          {% else %}
+            <span class="text-muted">Pending</span>
+          {% endif %}
+        </div>
+        <div class="text-muted small">Current Status</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-1 fw-bold">{{ uptime|default:"—" }}%</div>
+        <div class="text-muted small">Uptime</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-1 fw-bold">{{ total_checks }}</div>
+        <div class="text-muted small">Total Checks</div>
+      </div>
+    </div>
+    <div class="col-md-3">
+      <div class="card text-center p-3">
+        <div class="fs-1 fw-bold">{{ incidents.count }}</div>
+        <div class="text-muted small">Incidents</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mb-4 border-white">
+    <div class="card-header">Configuration</div>
+    <div class="card-body">
+      <dl class="row mb-0">
+        <dt class="col-sm-2">URL</dt>
+        <dd class="col-sm-10">
+          <code style="display:inline-block;max-width:90%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">{{ monitor.url }}</code>
+          <button class="btn btn-sm btn-outline-secondary ms-1 py-0 px-1" style="vertical-align:middle;line-height:1.4;" onclick="navigator.clipboard.writeText('{{ monitor.url }}');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',1500);">Copy</button>
+        </dd>
+        <dt class="col-sm-2">Method</dt>
+        <dd class="col-sm-10"><span style="color:#5fc9ff;">{{ monitor.method }}</span></dd>
+        <dt class="col-sm-2">Expected Status</dt>
+        <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_status }}</span></dd>
+        <dt class="col-sm-2">Interval</dt>
+        <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.check_interval_seconds }}s</span></dd>
+        <dt class="col-sm-2">Timeout</dt>
+        <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.timeout }}s</span></dd>
+        <dt class="col-sm-2">Consecutive Failures</dt>
+        <dd class="col-sm-10"><span style="color:var(--pp-danger);">{{ monitor.consecutive_failures }}</span></dd>
+        <dt class="col-sm-2">Last Checked</dt>
+        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
+      </dl>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Status Timeline (last {{ status_bar|length }} checks)</div>
+    <div class="card-body">
+      <style>
+        .sb{width:12px;height:24px;border-radius:2px}
+        .sb[data-s="UP"]{background:var(--pp-signal)}
+        .sb[data-s="DOWN"]{background:var(--pp-danger)}
+        .sb[data-s="DEGRADED"]{background:var(--pp-warning)}
+        .sb[data-s=""]{background:#2A3656}
+      </style>
+      <div class="d-flex gap-1" style="flex-wrap: wrap; min-height: 24px;">
+        {% for s in status_bar %}
+          <div class="sb" data-s="{{ s.status }}" title="{{ s.checked_at|date:'Y-m-d H:i:s' }} UTC — {{ s.status }}"></div>
+        {% empty %}
+          <div class="text-muted small">No data in this period.</div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {% if incidents %}
+  <div class="card mb-4">
+    <div class="card-header">Incidents</div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Opened</th>
+            <th>Closed</th>
+            <th>Reason</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for inc in incidents %}
+          <tr>
+            <td>{{ inc.opened_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td>{{ inc.closed_at|date:"Y-m-d H:i:s"|default:"Open" }} UTC</td>
+            <td>{{ inc.reason|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>Heartbeat Log</span>
+      <div class="d-flex gap-2">
+        <a href="{% url 'export_heartbeats' monitor.id %}?days={{ days }}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+        <div class="btn-group btn-group-sm">
+          <a href="?days=1" class="btn {% if days == 1 %}btn-success{% else %}btn-outline-secondary{% endif %}">24h</a>
+          <a href="?days=7" class="btn {% if days == 7 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Week</a>
+          <a href="?days=30" class="btn {% if days == 30 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Month</a>
+          <a href="?days=90" class="btn {% if days == 90 %}btn-success{% else %}btn-outline-secondary{% endif %}">90 Days</a>
+        </div>
+      </div>
+    </div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Status</th>
+            <th>Status Code</th>
+            <th>Response Time</th>
+            <th>Body Size</th>
+            <th>Error</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for hb in heartbeats %}
+          <tr>
+            <td>{{ hb.checked_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td>
+              {% if hb.status == "UP" %}
+                <span class="badge bg-success">UP</span>
+              {% elif hb.status == "DOWN" %}
+                <span class="badge bg-danger">DOWN</span>
+              {% elif hb.status == "DEGRADED" %}
+                <span class="badge bg-warning text-dark">DEGRADED</span>
+              {% else %}
+                <span class="badge bg-secondary">{{ hb.status }}</span>
+              {% endif %}
+            </td>
+            <td>{{ hb.status_code|default:"—" }}</td>
+            <td>{{ hb.response_time_ms|default:"—" }}ms</td>
+            <td>{{ hb.body_size|default:"—" }}</td>
+            <td>{{ hb.error|default:"—" }}</td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="6" class="text-center text-muted py-3">No checks yet. Wait for the worker to run.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Response Time (ms)</div>
+    <div class="card-body">
+      <canvas id="responseChart" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<script id="chartData" type="application/json">{{ chart_data|safe }}</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<script>
+(function(){
+  var hbs = JSON.parse(document.getElementById('chartData').textContent);
+  var labels = hbs.map(function(h){ return h.t; });
+  var data = hbs.map(function(h){ return h.r; });
+  var colors = hbs.map(function(h){
+    return h.s === 'UP' ? '#1DB86D' : h.s === 'DOWN' ? '#FF5C6C' : h.s === 'DEGRADED' ? '#F5A623' : '#6c757d';
+  });
+
+  var ctx = document.getElementById('responseChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Response Time',
+        data: data,
+        borderColor: 'rgba(47, 212, 143, 0.8)',
+        backgroundColor: 'rgba(47, 212, 143, 0.1)',
+        borderWidth: 2,
+        pointBackgroundColor: colors,
+        pointRadius: 3,
+        fill: true,
+        tension: 0.2
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: {
+          ticks: { color: '#9a99a0', maxTicksLimit: 12 },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        },
+        y: {
+          beginAtZero: true,
+          ticks: { color: '#9a99a0' },
+          grid: { color: 'rgba(255,255,255,0.05)' }
+        }
+      }
+    }
+  });
+})();
+</script>
+
+{% endblock %}

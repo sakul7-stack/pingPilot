@@ -23,7 +23,7 @@ def next_sleep(monitors: list[Monitor]) -> float:
         Monitor.objects
         .filter(is_active=True)
         .aggregate(min=models.Min("next_check_at"))
-        ["next_check_at__min"]
+        ["min"]
     )
     if not earliest or earliest <= timezone.now():
         return 2.0

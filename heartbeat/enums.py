@@ -14,7 +14,7 @@ class Status(models.TextChoices):
 
 
 @dataclass
-class checkResult:
+class CheckResult:
     status: Status
     status_code: int|None
     error: str

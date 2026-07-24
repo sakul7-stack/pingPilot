@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body{ margin:0; padding:0; background-color:#0B1220; font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; }
+    .container{ max-width:560px; margin:40px auto; background:#101A2E; border-radius:16px; overflow:hidden; border:1px solid #1E2A44; }
+    .header{ padding:36px 40px 24px; text-align:center; }
+    .header .icon{ width:56px; height:56px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:rgba(255,92,108,0.16); font-size:28px; }
+    .header h1{ margin:0; color:#FF5C6C; font-size:22px; font-weight:600; font-family:'Space Grotesk',sans-serif; }
+    .body{ padding:0 40px 32px; }
+    .body p{ color:#9a99a0; font-size:15px; line-height:1.7; margin:0 0 12px; }
+    .info{ background:rgba(255,255,255,0.03); padding:20px 24px; border-radius:12px; margin:20px 0; border:1px solid #1E2A44; }
+    .info dt{ color:#E7ECF5; font-size:13px; font-weight:500; margin-top:12px; }
+    .info dt:first-child{ margin-top:0; }
+    .info dd{ color:#9a99a0; font-size:14px; margin:2px 0 0; }
+    .cta{ text-align:center; margin:24px 0; }
+    .cta a{ display:inline-block; background:#1DB86D; color:#0B1220; text-decoration:none; padding:12px 36px; border-radius:10px; font-size:15px; font-weight:600; }
+    .divider{ height:1px; background:#1E2A44; margin:0 40px; }
+    .footer{ padding:24px 40px; text-align:center; }
+    .footer p{ color:#5a5960; font-size:12px; margin:4px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">🔴</div>
+      <h1>{{ monitor.name }} is DOWN</h1>
+    </div>
+    <div class="body">
+      <p>Your monitor has detected that <strong style="color:#E7ECF5;">{{ monitor.name }}</strong> is not responding as expected.</p>
+      <div class="info">
+        <dt>URL</dt>
+        <dd>{{ monitor.url }}</dd>
+        <dt>Error</dt>
+        <dd>{{ result.error|default:"Unknown" }}</dd>
+        <dt>Status Code</dt>
+        <dd>{{ result.status_code|default:"N/A" }}</dd>
+        <dt>Time</dt>
+        <dd>{{ result.checked_at|date:"Y-m-d H:i:s" }} UTC</dd>
+      </div>
+      <div class="cta">
+        <a href="{{ dashboard_url }}">View Dashboard</a>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="footer">
+      <p>&copy; 2026 PingPilot. All rights reserved.</p>
+      <p>Monitoring Made Simple</p>
+    </div>
+  </div>
+</body>
+</html>

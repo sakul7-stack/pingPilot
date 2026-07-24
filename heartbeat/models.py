@@ -5,7 +5,7 @@ from django.core.validators import MinValueValidator, MaxValueValidator
 
 
 
-from .enums import HttpMethod, Status, checkResult
+from .enums import HttpMethod, Status
 
 
 class Monitor(models.Model):
@@ -25,9 +25,9 @@ class Monitor(models.Model):
         validators=[MinValueValidator(180),MaxValueValidator(86400)],
     )
     next_check_at=models.DateTimeField(default=timezone.now)
-    consecutive_faliures=models.IntegerField(default=0)
+    consecutive_failures=models.IntegerField(default=0)
     last_checked_at=models.DateTimeField(null=True,blank=True)
-    last_checked_at=models.CharField(
+    last_status=models.CharField(
         max_length=10,
         choices=Status.choices,null=True
     )
