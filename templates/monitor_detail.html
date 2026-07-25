@@ -1,6 +1,25 @@
 {% extends "base.html" %}
-
 {% block content %}
+<style>
+.sb{width:100%;height:28px;border-radius:3px;min-width:6px}
+.sb-100{background:var(--pp-signal)}
+.sb-98{background:var(--pp-warning)}
+.sb-low{background:var(--pp-danger)}
+.sb-none{background:#2A3656}
+.timeline-wrap{display:flex;gap:2px;align-items:stretch;min-height:28px}
+.timeline-item{flex:1;display:flex;flex-direction:column;align-items:center;min-width:0}
+.timeline-label{font-size:9px;line-height:1;margin-top:3px;white-space:nowrap;color:var(--pp-muted)}
+@media (max-width: 768px) {
+  .stat-card{font-size:.85rem}
+  .stat-card .fs-1{font-size:1.8rem!important}
+  .btn-group{flex-wrap:nowrap}
+  .btn-group .btn{font-size:.75rem;padding:.2rem .5rem}
+  .card-header{gap:.5rem}
+}
+@media (max-width: 576px) {
+  .stat-card .fs-1{font-size:1.4rem!important}
+}
+</style>
 
 <div class="container mt-4">
   <nav aria-label="breadcrumb">
@@ -12,7 +31,8 @@
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">{{ monitor.name }}</h2>
-    <div>
+    <div class="d-flex gap-1">
+      <a href="{% url 'edit_monitor' monitor.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
       <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
         {% if monitor.is_active %}Pause{% else %}Activate{% endif %}
       </a>
@@ -21,7 +41,7 @@
     </div>
   </div>
 
-  <div class="row g-3 mb-4">
+  <div class="row g-3 mb-3">
     <div class="col-md-3">
       <div class="card text-center p-3">
         <div class="fs-1 fw-bold">
@@ -42,8 +62,8 @@
     </div>
     <div class="col-md-3">
       <div class="card text-center p-3">
-        <div class="fs-1 fw-bold">{{ uptime|default:"—" }}%</div>
-        <div class="text-muted small">Uptime</div>
+        <div class="fs-1 fw-bold" style="color:{{ uptime_color }};">{{ uptime|default:"—" }}%</div>
+        <div class="text-muted small">{{ uptime_label }}</div>
       </div>
     </div>
     <div class="col-md-3">
@@ -56,6 +76,29 @@
       <div class="card text-center p-3">
         <div class="fs-1 fw-bold">{{ incidents.count }}</div>
         <div class="text-muted small">Incidents</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex justify-content-center gap-2 mb-3 flex-wrap">
+    <a href="?days=1" class="btn btn-sm {% if days == 1 %}btn-success{% else %}btn-outline-secondary{% endif %}">24h</a>
+    <a href="?days=7" class="btn btn-sm {% if days == 7 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Week</a>
+    <a href="?days=30" class="btn btn-sm {% if days == 30 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Month</a>
+    <a href="?days=90" class="btn btn-sm {% if days == 90 %}btn-success{% else %}btn-outline-secondary{% endif %}">90 Days</a>
+  </div>
+
+  <div class="card mb-4">
+    <div class="card-header">Status Timeline ({{ uptime_label }})</div>
+    <div class="card-body">
+      <div class="timeline-wrap">
+        {% for s in status_bar %}
+          <div class="timeline-item" title="{{ s.label }} — {% if s.pct == -1 %}No data{% else %}{{ s.pct }}% uptime{% endif %}">
+            <div class="sb {% if s.pct == -1 %}sb-none{% elif s.pct == 100 %}sb-100{% elif s.pct >= 98 %}sb-98{% else %}sb-low{% endif %}"></div>
+            <span class="timeline-label">{{ s.label }}</span>
+          </div>
+        {% empty %}
+          <div class="text-muted small">No data in this period.</div>
+        {% endfor %}
       </div>
     </div>
   </div>
@@ -73,6 +116,8 @@
         <dd class="col-sm-10"><span style="color:#5fc9ff;">{{ monitor.method }}</span></dd>
         <dt class="col-sm-2">Expected Status</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_status }}</span></dd>
+        <dt class="col-sm-2">Expected Keyword</dt>
+        <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_keyword|default:"—" }}</span></dd>
         <dt class="col-sm-2">Interval</dt>
         <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.check_interval_seconds }}s</span></dd>
         <dt class="col-sm-2">Timeout</dt>
@@ -82,26 +127,6 @@
         <dt class="col-sm-2">Last Checked</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
       </dl>
-    </div>
-  </div>
-
-  <div class="card mb-4">
-    <div class="card-header">Status Timeline (last {{ status_bar|length }} checks)</div>
-    <div class="card-body">
-      <style>
-        .sb{width:12px;height:24px;border-radius:2px}
-        .sb[data-s="UP"]{background:var(--pp-signal)}
-        .sb[data-s="DOWN"]{background:var(--pp-danger)}
-        .sb[data-s="DEGRADED"]{background:var(--pp-warning)}
-        .sb[data-s=""]{background:#2A3656}
-      </style>
-      <div class="d-flex gap-1" style="flex-wrap: wrap; min-height: 24px;">
-        {% for s in status_bar %}
-          <div class="sb" data-s="{{ s.status }}" title="{{ s.checked_at|date:'Y-m-d H:i:s' }} UTC — {{ s.status }}"></div>
-        {% empty %}
-          <div class="text-muted small">No data in this period.</div>
-        {% endfor %}
-      </div>
     </div>
   </div>
 
@@ -131,20 +156,15 @@
   </div>
   {% endif %}
 
-  <div class="card">
+  <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
       <span>Heartbeat Log</span>
-      <div class="d-flex gap-2">
+      <div>
         <a href="{% url 'export_heartbeats' monitor.id %}?days={{ days }}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
-        <div class="btn-group btn-group-sm">
-          <a href="?days=1" class="btn {% if days == 1 %}btn-success{% else %}btn-outline-secondary{% endif %}">24h</a>
-          <a href="?days=7" class="btn {% if days == 7 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Week</a>
-          <a href="?days=30" class="btn {% if days == 30 %}btn-success{% else %}btn-outline-secondary{% endif %}">1 Month</a>
-          <a href="?days=90" class="btn {% if days == 90 %}btn-success{% else %}btn-outline-secondary{% endif %}">90 Days</a>
-        </div>
       </div>
     </div>
     <div class="card-body p-0">
+      <div class="table-responsive">
       <table class="table table-sm mb-0">
         <thead>
           <tr>
@@ -159,7 +179,7 @@
         <tbody>
           {% for hb in heartbeats %}
           <tr>
-            <td>{{ hb.checked_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td class="text-nowrap">{{ hb.checked_at|date:"Y-m-d H:i:s" }} UTC</td>
             <td>
               {% if hb.status == "UP" %}
                 <span class="badge bg-success">UP</span>
@@ -172,7 +192,7 @@
               {% endif %}
             </td>
             <td>{{ hb.status_code|default:"—" }}</td>
-            <td>{{ hb.response_time_ms|default:"—" }}ms</td>
+            <td>{{ hb.response_time_ms|floatformat:2|default:"—" }}ms</td>
             <td>{{ hb.body_size|default:"—" }}</td>
             <td>{{ hb.error|default:"—" }}</td>
           </tr>
@@ -183,6 +203,7 @@
           {% endfor %}
         </tbody>
       </table>
+      </div>
     </div>
   </div>
 
@@ -241,5 +262,4 @@
   });
 })();
 </script>
-
 {% endblock %}

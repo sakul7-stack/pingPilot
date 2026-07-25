@@ -61,6 +61,19 @@ class HeartBeat(models.Model):
         indexes=[models.Index(fields=["monitor","-checked_at"])]
 
 
+class APIKey(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="api_keys")
+    name = models.CharField(max_length=100, default="Unnamed")
+    prefix = models.CharField(max_length=8)
+    key_hash = models.CharField(max_length=64)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        indexes = [models.Index(fields=["key_hash"])]
+
+
 class Incident(models.Model):
     monitor=models.ForeignKey(
         Monitor,on_delete=models.CASCADE,related_name="indidents"
