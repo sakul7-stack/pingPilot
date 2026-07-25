@@ -79,49 +79,49 @@
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-1" style="color:var(--pp-signal);">List Monitors</h6>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" https://127.0.0.1:8000/api/monitors/">Copy</button>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" {{ site_url }}/api/monitors/">Copy</button>
         </div>
         <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;margin:0;"><span style="color:#6c757d;"># Returns all monitors for your account</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/</pre>
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/</pre>
       </div>
 
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-1" style="color:var(--pp-signal);">Monitor Details</h6>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" https://127.0.0.1:8000/api/monitors/&lt;id&gt;/">Copy</button>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" {{ site_url }}/api/monitors/&lt;id&gt;/">Copy</button>
         </div>
         <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;margin:0;"><span style="color:#6c757d;"># Replace &lt;id&gt; with the monitor ID from the list above</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/&lt;id&gt;/</pre>
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/&lt;id&gt;/</pre>
       </div>
 
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-1" style="color:var(--pp-signal);">Heartbeat Log</h6>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" https://127.0.0.1:8000/api/monitors/&lt;id&gt;/heartbeats/?days=7">Copy</button>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" {{ site_url }}/api/monitors/&lt;id&gt;/heartbeats/?days=7">Copy</button>
         </div>
         <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;margin:0;"><span style="color:#6c757d;"># Last 24 hours by default. Use ?days=N to change.</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/&lt;id&gt;/heartbeats/
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/&lt;id&gt;/heartbeats/
 
 <span style="color:#6c757d;"># Example: last 7 days</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/&lt;id&gt;/heartbeats/?days=7</pre>
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/&lt;id&gt;/heartbeats/?days=7</pre>
       </div>
 
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-1" style="color:var(--pp-signal);">Incidents</h6>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" https://127.0.0.1:8000/api/monitors/&lt;id&gt;/incidents/">Copy</button>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" {{ site_url }}/api/monitors/&lt;id&gt;/incidents/">Copy</button>
         </div>
         <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;margin:0;"><span style="color:#6c757d;"># Returns all incidents for a monitor</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/&lt;id&gt;/incidents/</pre>
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/&lt;id&gt;/incidents/</pre>
       </div>
 
       <div class="mb-3">
         <div class="d-flex justify-content-between align-items-center">
           <h6 class="mb-1" style="color:var(--pp-signal);">Monitor Stats</h6>
-          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" https://127.0.0.1:8000/api/monitors/&lt;id&gt;/stats/">Copy</button>
+          <button class="btn btn-sm btn-outline-secondary copy-btn" data-cmd="curl -H \"X-API-Key: pp_...\" {{ site_url }}/api/monitors/&lt;id&gt;/stats/">Copy</button>
         </div>
         <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;margin:0;"><span style="color:#6c757d;"># Returns uptime, total checks, current status</span>
-curl -H "X-API-Key: pp_..." https://127.0.0.1:8000/api/monitors/&lt;id&gt;/stats/</pre>
+curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/&lt;id&gt;/stats/</pre>
       </div>
 
     </div>

@@ -11,6 +11,8 @@ from django.utils import timezone
 from django.views.decorators.http import require_POST
 from datetime import timedelta
 
+from django.conf import settings as django_settings
+
 from accounts.models import Profile
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey
 
@@ -228,9 +230,11 @@ def api_keys(request):
         return render(request, "api_keys.html", {
             "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
             "new_key": f"pp_{raw}",
+            "site_url": django_settings.SITE_URL,
         })
     return render(request, "api_keys.html", {
         "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
+        "site_url": django_settings.SITE_URL,
     })
 
 

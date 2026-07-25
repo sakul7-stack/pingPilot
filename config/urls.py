@@ -6,7 +6,7 @@ from django.conf.urls.static import static
 from dashboard import views as dashboard_views
 
 urlpatterns = [
-    path("admin/", admin.site.urls),
+    path("akbar/", admin.site.urls),
     path("", include("core.urls")),
     path("dashboard/", include("dashboard.urls")),
     path("accounts/", include("allauth.urls")),
