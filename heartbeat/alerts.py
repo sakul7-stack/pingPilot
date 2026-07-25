@@ -15,9 +15,6 @@ def evaluate_and_alert(monitor: Monitor, result: CheckResult) -> None:
             Monitor.objects.filter(pk=monitor.pk).update(last_alert_sent_at=None)
         return
 
-    if monitor.consecutive_failures + 1 < 2:
-        return
-
     if monitor.last_alert_sent_at:
         return
 
