@@ -252,7 +252,7 @@ def api_auth(request):
     auth = request.headers.get("X-API-Key", "")
     if not auth.startswith("pp_"):
         return None
-    key_hash = hashlib.sha256(auth.encode()).hexdigest()
+    key_hash = hashlib.sha256(auth[3:].encode()).hexdigest()
     try:
         key = APIKey.objects.get(key_hash=key_hash, is_active=True)
         key.last_used_at = timezone.now()
