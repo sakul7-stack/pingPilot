@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4" style="max-width:600px;">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+      <li class="breadcrumb-item active">Connect Telegram</li>
+    </ol>
+  </nav>
+
+  <h2 class="mb-3">Connect Telegram</h2>
+
+  <div class="card mb-3 border-white">
+    <div class="card-body">
+      <ol class="mb-0">
+        <li>Open Telegram and search for <strong>@pingpilot_alerts_bot</strong></li>
+        <li>Tap <strong>Start</strong> and send any message (e.g. "hi")</li>
+        <li>Click <strong>Check for messages</strong> below</li>
+        <li>Click <strong>Use</strong> next to your name — the Chat ID will be copied</li>
+        <li>Go back to your monitor and paste it in the Telegram Chat ID field</li>
+      </ol>
+    </div>
+  </div>
+
+  <form method="post" class="mb-3">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary">Check for messages</button>
+  </form>
+
+  {% if chats %}
+    <div class="card border-white">
+      <div class="card-header">People who messaged the bot</div>
+      <div class="card-body p-0">
+        <ul class="list-group list-group-flush">
+          {% for chat in chats %}
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <div>
+                <strong>{{ chat.name }}</strong>
+                {% if chat.username %}
+                  <span class="text-muted">@{{ chat.username }}</span>
+                {% endif %}
+              </div>
+              <button class="btn btn-sm btn-outline-success copy-chat-id" data-chat-id="{{ chat.id }}">
+                Copy {{ chat.id }}
+              </button>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% elif request.method == "POST" %}
+    <div class="alert alert-info">No messages found. Make sure you messaged <strong>@pingpilot_alerts_bot</strong> first.</div>
+  {% endif %}
+</div>
+
+<script>
+document.querySelectorAll('.copy-chat-id').forEach(function(btn) {
+  btn.addEventListener('click', function() {
+    navigator.clipboard.writeText(this.dataset.chatId).then(function() {
+      var orig = this.textContent;
+      this.textContent = 'Copied!';
+      this.classList.remove('btn-outline-success');
+      this.classList.add('btn-success');
+      setTimeout(function() {
+        this.textContent = orig;
+        this.classList.remove('btn-success');
+        this.classList.add('btn-outline-success');
+      }.bind(this), 2000);
+    }.bind(this));
+  });
+});
+</script>
+{% endblock %}

@@ -42,7 +42,7 @@ class Command(BaseCommand):
                         logger.info(
                             "monitor=%s status=%s latency=%.0fms error=%s",
                             monitor.name, result.status,
-                            result.response_time or 0, result.error,
+                            result.response_time_ms or 0, result.error,
                         )
 
                 if monitors:

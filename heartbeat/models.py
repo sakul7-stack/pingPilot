@@ -36,6 +36,9 @@ class Monitor(models.Model):
     created_at=models.DateTimeField(auto_now_add=True)
     updated_at=models.DateTimeField(auto_now=True)
 
+    email_alerts=models.BooleanField(default=True)
+    share_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+
     class Meta:
         indexes=[
             models.Index(fields=["next_check_at"]),
@@ -84,3 +87,23 @@ class Incident(models.Model):
 
     class Meta:
         indexes=[models.Index(fields=["monitor","closed_at"])]
+
+
+
+class NotificationChannel(models.Model):
+    PROVIDERS=[
+        ("webhook","Webhook"),
+        ("telegram","Telegram"),
+        ("discord","Discord"),
+    ]
+
+    monitor=models.ForeignKey(
+        Monitor,on_delete=models.CASCADE,related_name="channels"
+    )
+    provider=models.CharField(max_length=50,blank=True)
+    label=models.CharField(max_length=50,blank=True)
+    config=models.JSONField(default=dict)
+
+
+    class Meta:
+        ordering=["provider"]

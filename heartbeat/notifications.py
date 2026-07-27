@@ -6,29 +6,37 @@ from django.utils import timezone
 
 from .enums import CheckResult
 from .models import Monitor
+from .providers import dispatch
 
 BASE = f"{settings.SITE_URL}/dashboard/"
 
 
 def send_down_alert(monitor: Monitor, result: CheckResult) -> None:
-    subject = f"DOWN: {monitor.name}"
-    context = {
-        "monitor": monitor,
-        "result": result,
-        "dashboard_url": BASE,
+    payload = {
+        "event": "down",
+        "monitor": {"name": monitor.name, "url": monitor.url},
+        "result": result.to_dict(),
     }
-    html = render_to_string("email/down_alert.html", context)
-    text = strip_tags(html)
-    send_mail(subject, text, None, [monitor.user.email], html_message=html)
+    if monitor.email_alerts:
+        _send_email(monitor, "down", payload)
+    for ch in monitor.channels.all():
+        dispatch(ch.provider, ch.config, payload)
 
 
 def send_up_alert(monitor: Monitor) -> None:
-    subject = f"UP: {monitor.name} recovered"
-    context = {
-        "monitor": monitor,
-        "recovered_at": timezone.now(),
-        "dashboard_url": BASE,
+    payload = {
+        "event": "up",
+        "monitor": {"name": monitor.name, "url": monitor.url},
+        "recovered_at": timezone.now().isoformat(),
     }
-    html = render_to_string("email/up_alert.html", context)
-    text = strip_tags(html)
-    send_mail(subject, text, None, [monitor.user.email], html_message=html)
+    if monitor.email_alerts:
+        _send_email(monitor, "up", payload)
+    for ch in monitor.channels.all():
+        dispatch(ch.provider, ch.config, payload)
+
+
+def _send_email(monitor, event: str, payload: dict) -> None:
+    subject = f"DOWN: {monitor.name}" if event == "down" else f"UP: {monitor.name} recovered"
+    template = "email/down_alert.html" if event == "down" else "email/up_alert.html"
+    html = render_to_string(template, {**payload, "dashboard_url": BASE})
+    send_mail(subject, strip_tags(html), None, [monitor.user.email], html_message=html)

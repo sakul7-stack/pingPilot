@@ -23,7 +23,7 @@ def _check_result(status: Status, error: str, **kw) -> CheckResult:
         status=status,
         status_code=kw.get("status_code"),
         error=error,
-        response_time=kw.get("response_time"),
+        response_time_ms=kw.get("response_time_ms"),
         body_size=kw.get("body_size"),
         checked_at=datetime.now(),
     )
@@ -45,7 +45,7 @@ async def check_monitor(
             status,
             error="",
             status_code=resp.status_code,
-            response_time=elapsed,
+            response_time_ms=elapsed,
             body_size=len(body),
         )
     except httpx.TimeoutException:
@@ -77,7 +77,7 @@ async def retry_if_transient(
             status,
             error="",
             status_code=resp.status_code,
-            response_time=elapsed,
+            response_time_ms=elapsed,
             body_size=len(body),
         )
     except Exception:

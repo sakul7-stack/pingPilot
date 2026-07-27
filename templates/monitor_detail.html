@@ -24,7 +24,11 @@
 <div class="container mt-4">
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
+      {% if is_public %}
+      <li class="breadcrumb-item">Shared Status</li>
+      {% else %}
       <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Dashboard</a></li>
+      {% endif %}
       <li class="breadcrumb-item active">{{ monitor.name }}</li>
     </ol>
   </nav>
@@ -32,12 +36,17 @@
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="mb-0">{{ monitor.name }}</h2>
     <div class="d-flex gap-1">
+      {% if is_public %}
+        <span class="badge bg-info" style="font-size:.85rem;padding:.4rem .8rem;">Shared View</span>
+      {% else %}
+      <button class="btn btn-sm btn-primary" onclick="copyPublicLink()">Get public link</button>
       <a href="{% url 'edit_monitor' monitor.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
       <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
         {% if monitor.is_active %}Pause{% else %}Activate{% endif %}
       </a>
       <a href="{% url 'delete_monitor' monitor.id %}" class="btn btn-sm btn-outline-danger"
          onclick="return confirm('Delete {{ monitor.name }}?')">Delete</a>
+      {% endif %}
     </div>
   </div>
 
@@ -126,6 +135,15 @@
         <dd class="col-sm-10"><span style="color:var(--pp-danger);">{{ monitor.consecutive_failures }}</span></dd>
         <dt class="col-sm-2">Last Checked</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
+        {% if ssl_info %}
+        <dt class="col-sm-2">SSL Expiry</dt>
+        <dd class="col-sm-10">
+          <span style="color:{% if ssl_info.remaining > 30 %}var(--pp-signal){% elif ssl_info.remaining > 7 %}var(--pp-warning){% else %}var(--pp-danger){% endif %};">
+            {{ ssl_info.expiry }} ({{ ssl_info.remaining }} days)
+          </span>
+          <span class="text-muted small">{% if ssl_info.issuer %} — {{ ssl_info.issuer }}{% endif %}</span>
+        </dd>
+        {% endif %}
       </dl>
     </div>
   </div>
@@ -160,7 +178,9 @@
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
       <span>Heartbeat Log</span>
       <div>
+        {% if not is_public %}
         <a href="{% url 'export_heartbeats' monitor.id %}?days={{ days }}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+        {% endif %}
       </div>
     </div>
     <div class="card-body p-0">
@@ -209,8 +229,8 @@
 
   <div class="card mb-4">
     <div class="card-header">Response Time (ms)</div>
-    <div class="card-body">
-      <canvas id="responseChart" height="180"></canvas>
+    <div class="card-body p-3">
+      <canvas id="responseChart" style="display:block;width:100%;height:180px;max-width:100%;"></canvas>
     </div>
   </div>
 </div>
@@ -222,23 +242,57 @@
   var hbs = JSON.parse(document.getElementById('chartData').textContent);
   var labels = hbs.map(function(h){ return h.t; });
   var data = hbs.map(function(h){ return h.r; });
+  var statuses = hbs.map(function(h){ return h.s; });
   var colors = hbs.map(function(h){
     return h.s === 'UP' ? '#1DB86D' : h.s === 'DOWN' ? '#FF5C6C' : h.s === 'DEGRADED' ? '#F5A623' : '#6c757d';
   });
+  var validData = data.filter(function(v){ return v !== null && v !== undefined; });
+  var avg = validData.length ? validData.reduce(function(a,b){ return a + b; }, 0) / validData.length : 0;
+  var min = validData.length ? Math.min.apply(null, validData) : 0;
+  var max = validData.length ? Math.max.apply(null, validData) : 0;
 
-  var ctx = document.getElementById('responseChart').getContext('2d');
+Chart.register({
+  id: 'avgLine',
+  afterDraw: function(chart) {
+    var ctx = chart.ctx;
+    var area = chart.chartArea;
+    var yAxis = chart.scales.y;
+    var yPx = yAxis.getPixelForValue(avg);
+    if (yPx < area.top || yPx > area.bottom) return;
+    ctx.save();
+    ctx.setLineDash([5, 5]);
+    ctx.strokeStyle = 'rgba(255, 179, 71, 0.6)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(area.left, yPx);
+    ctx.lineTo(area.right, yPx);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#ffb347';
+    ctx.font = '10px Inter, sans-serif';
+    ctx.fillText('Avg ' + avg.toFixed(0) + 'ms', area.right - 70, yPx - 4);
+    ctx.fillStyle = '#9a99a0';
+    ctx.font = '11px Inter, sans-serif';
+    ctx.fillText('Min: ' + min + 'ms  |  Avg: ' + avg.toFixed(0) + 'ms  |  Max: ' + max + 'ms', area.left + 10, area.bottom + 45);
+    ctx.restore();
+  }
+});
+var ctx = document.getElementById('responseChart').getContext('2d');
   new Chart(ctx, {
     type: 'line',
     data: {
       labels: labels,
       datasets: [{
-        label: 'Response Time',
+        label: 'Response Time (ms)',
         data: data,
         borderColor: 'rgba(47, 212, 143, 0.8)',
         backgroundColor: 'rgba(47, 212, 143, 0.1)',
         borderWidth: 2,
         pointBackgroundColor: colors,
-        pointRadius: 3,
+        pointBorderColor: colors,
+        pointRadius: 4,
+        pointHoverRadius: 7,
+        pointHitRadius: 10,
         fill: true,
         tension: 0.2
       }]
@@ -246,7 +300,30 @@
     options: {
       responsive: true,
       maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
+      interaction: { mode: 'index', intersect: false },
+      onHover: function(e) {
+        e.native.target.style.cursor = e.chart.getElementsAtEventForMode(e, 'index', { intersect: false }, false).length ? 'pointer' : 'default';
+      },
+      plugins: {
+        legend: {
+          display: true,
+          labels: { color: '#E7ECF5', font: { size: 12 } }
+        },
+        tooltip: {
+          backgroundColor: '#1a1a24',
+          titleColor: '#E7ECF5',
+          bodyColor: '#9a99a0',
+          borderColor: '#2a3656',
+          borderWidth: 1,
+          padding: 10,
+          callbacks: {
+            afterBody: function(items) {
+              var i = items[0].dataIndex;
+              return ['Status: ' + statuses[i], 'Min: ' + min + 'ms  Max: ' + max + 'ms  Avg: ' + avg.toFixed(0) + 'ms'];
+            }
+          }
+        }
+      },
       scales: {
         x: {
           ticks: { color: '#9a99a0', maxTicksLimit: 12 },
@@ -254,12 +331,29 @@
         },
         y: {
           beginAtZero: true,
-          ticks: { color: '#9a99a0' },
+          ticks: { color: '#9a99a0', callback: function(v){ return v + 'ms'; } },
           grid: { color: 'rgba(255,255,255,0.05)' }
         }
       }
     }
   });
 })();
+</script>
+
+<script>
+function copyPublicLink() {
+  var url = window.location.origin + '{% url "public_monitor_detail" monitor.share_token %}';
+  navigator.clipboard.writeText(url).then(function() {
+    var btn = document.querySelector('.btn-primary');
+    btn.textContent = 'Copied!';
+    btn.classList.remove('btn-primary');
+    btn.classList.add('btn-success');
+    setTimeout(function() {
+      btn.textContent = 'Get public link';
+      btn.classList.remove('btn-success');
+      btn.classList.add('btn-primary');
+    }, 2000);
+  });
+}
 </script>
 {% endblock %}

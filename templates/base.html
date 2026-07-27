@@ -12,6 +12,11 @@
 <link rel="stylesheet" href="{% static 'css/global.css' %}">
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"></script>
 
+    <meta property="og:title" content="PingPilot — Monitoring made simple">
+    <meta property="og:description" content="Monitor your websites and APIs.">
+    <meta property="og:image" content="https://ping.kushal-kc.com.np/static/favicon.png">
+    <meta property="og:type" content="website">
+    <meta name="twitter:card" content="summary">
     </head>
     <body>
 
@@ -49,6 +54,8 @@
 {% block content %}
 
 {% endblock %}
+
+{% block extra_js %}{% endblock %}
 
 </body>
 </html>

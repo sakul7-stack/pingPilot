@@ -10,6 +10,7 @@ def get_due_monitors(batch_size:int=500)->list[Monitor]:
         return list(
             Monitor.objects
             .select_related("user")
+            .prefetch_related("channels")
             .select_for_update(skip_locked=True)
             .filter(is_active=True,next_check_at__lte=now)
             .order_by("next_check_at")[:batch_size]

@@ -2,6 +2,9 @@ import csv
 import json
 import hashlib
 import secrets
+import ssl
+import socket
+from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse, JsonResponse
@@ -9,12 +12,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.utils import timezone
 from django.views.decorators.http import require_POST
-from datetime import timedelta
+from datetime import timedelta, datetime
+
+import httpx
 
 from django.conf import settings as django_settings
 
 from accounts.models import Profile
-from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey
+from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel
 
 
 @login_required
@@ -42,7 +47,7 @@ def create_monitor(request):
             messages.error(request, "Limit reached. You can create up to 100 monitors.")
             return redirect("dashboard")
 
-        Monitor.objects.create(
+        monitor = Monitor.objects.create(
             user=request.user,
             name=name,
             url=url,
@@ -51,7 +56,9 @@ def create_monitor(request):
             check_interval_seconds=int(check_interval),
             timeout=int(timeout),
             expected_keyword=expected_keyword,
+            email_alerts=request.POST.get("email_alerts") == "on",
         )
+        _save_channels(monitor, request.POST)
         messages.success(request, f"Monitor '{name}' created.")
     return redirect("dashboard")
 
@@ -94,7 +101,9 @@ def edit_monitor(request, monitor_id):
             monitor.check_interval_seconds = int(check_interval)
             monitor.timeout = int(timeout)
             monitor.expected_keyword = expected_keyword
+            monitor.email_alerts = request.POST.get("email_alerts") == "on"
             monitor.save()
+            _save_channels(monitor, request.POST)
             messages.success(request, f"Monitor '{name}' updated.")
 
         return redirect("dashboard")
@@ -102,9 +111,35 @@ def edit_monitor(request, monitor_id):
     return render(request, "edit_monitor.html", {"monitor": monitor})
 
 
+def get_ssl_info(url):
+    try:
+        host = urlparse(url).hostname
+        if not host:
+            return None
+        ctx = ssl.create_default_context()
+        with socket.create_connection((host, 443), timeout=5) as sock:
+            with ctx.wrap_socket(sock, server_hostname=host) as ssock:
+                cert = ssock.getpeercert()
+        raw = cert["notAfter"]
+        expiry = datetime.strptime(raw.replace(" GMT", ""), "%b %d %H:%M:%S %Y")
+        remaining = (expiry - timezone.now().replace(tzinfo=None)).days
+        issuer = ""
+        if cert.get("issuer"):
+            for pair in cert["issuer"]:
+                if pair[0] == "commonName":
+                    issuer = pair[1]
+                    break
+        return {"expiry": expiry.strftime("%Y-%m-%d"), "remaining": remaining, "issuer": issuer}
+    except Exception:
+        return None
+
+
 @login_required
 def monitor_detail(request, monitor_id):
     monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
+    if not monitor.share_token:
+        monitor.share_token = secrets.token_urlsafe(16)
+        monitor.save(update_fields=["share_token"])
     days = int(request.GET.get("days", 1))
     cutoff = timezone.now() - timedelta(days=days)
 
@@ -159,6 +194,7 @@ def monitor_detail(request, monitor_id):
         }
 
     chart_data = json.dumps([serialize_hb(h) for h in hb_list])
+    ssl_info = get_ssl_info(monitor.url)
 
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
@@ -172,6 +208,82 @@ def monitor_detail(request, monitor_id):
         "days": days,
         "status_bar": aggregated_bar,
         "chart_data": chart_data,
+        "ssl_info": ssl_info,
+    })
+
+
+def public_monitor_detail(request, token):
+    monitor = get_object_or_404(Monitor, share_token=token, is_active=True)
+    days = int(request.GET.get("days", 1))
+    cutoff = timezone.now() - timedelta(days=days)
+
+    heartbeats_qs = Heartbeat.objects.filter(
+        monitor=monitor, checked_at__gte=cutoff
+    ).order_by("-checked_at")
+    incidents = Incident.objects.filter(monitor=monitor).order_by("-opened_at")
+    all_time = Heartbeat.objects.filter(monitor=monitor).count()
+
+    total = heartbeats_qs.count()
+    ups = heartbeats_qs.filter(status="UP").count()
+    uptime = round(ups / total * 100, 2) if total > 0 else None
+
+    if uptime is None:
+        uptime_color = "var(--pp-muted)"
+    elif uptime == 100:
+        uptime_color = "var(--pp-signal)"
+    elif uptime >= 98:
+        uptime_color = "var(--pp-warning)"
+    else:
+        uptime_color = "var(--pp-danger)"
+
+    uptime_label = {1: "Last 24h", 7: "Last 7 days", 30: "Last 30 days", 90: "Last 90 days"}.get(days, f"Last {days} days")
+
+    all_hb = list(heartbeats_qs.order_by("checked_at").values("status", "checked_at"))
+    now = timezone.now()
+    start = now - timedelta(days=days)
+    total_secs = (now - start).total_seconds()
+    seg_secs = total_secs / 30
+    aggregated_bar = []
+    for i in range(30):
+        seg_start = start + timedelta(seconds=i * seg_secs)
+        seg_end = seg_start + timedelta(seconds=seg_secs)
+        in_seg = [h for h in all_hb if seg_start <= h["checked_at"] < seg_end]
+        total_in = len(in_seg)
+        up_in = sum(1 for h in in_seg if h["status"] == "UP")
+        pct = round(up_in / total_in * 100) if total_in > 0 else -1
+        label = seg_start.strftime("%H:%M" if days == 1 else "%m-%d")
+        aggregated_bar.append({"label": label, "pct": pct})
+
+    heartbeats = list(heartbeats_qs[:100])
+
+    hb_list = list(heartbeats_qs.order_by("checked_at")[:100].values(
+        "checked_at", "response_time_ms", "status"
+    ))
+    def serialize_hb(hb):
+        dt = hb["checked_at"]
+        return {
+            "t": dt.strftime("%H:%M"),
+            "r": hb["response_time_ms"],
+            "s": hb["status"],
+        }
+
+    chart_data = json.dumps([serialize_hb(h) for h in hb_list])
+    ssl_info = get_ssl_info(monitor.url)
+
+    return render(request, "monitor_detail.html", {
+        "monitor": monitor,
+        "heartbeats": heartbeats,
+        "incidents": incidents,
+        "uptime": uptime,
+        "uptime_color": uptime_color,
+        "uptime_label": uptime_label,
+        "total_checks": total,
+        "all_time_checks": all_time,
+        "days": days,
+        "status_bar": aggregated_bar,
+        "chart_data": chart_data,
+        "ssl_info": ssl_info,
+        "is_public": True,
     })
 
 
@@ -337,3 +449,72 @@ def api_monitor_stats(request, monitor_id):
         "current_status": monitor.last_status,
         "is_active": monitor.is_active,
     })
+
+
+@login_required
+def telegram_connect(request):
+    chats = []
+    if request.method == "POST":
+        token = django_settings.TELEGRAM_BOT_TOKEN
+        if token:
+            try:
+                resp = httpx.get(
+                    f"https://api.telegram.org/bot{token}/getUpdates",
+                    timeout=10
+                )
+                data = resp.json()
+                seen = set()
+                for update in data.get("result", []):
+                    msg = update.get("message", {})
+                    chat = msg.get("chat", {})
+                    cid = chat.get("id")
+                    if cid and cid not in seen:
+                        seen.add(cid)
+                        name = (
+                            chat.get("first_name", "")
+                            or chat.get("title", "")
+                            or str(cid)
+                        )
+                        chats.append({"id": cid, "name": name, "username": chat.get("username", "")})
+            except Exception:
+                pass
+    return render(request, "telegram_connect.html", {"chats": chats})
+
+
+def _save_channels(monitor, data):
+    kept_ids = []
+    i = 0
+    while f"ch_{i}_provider" in data:
+        provider = data[f"ch_{i}_provider"]
+        channel_id = data.get(f"ch_{i}_id", "")
+        label = data.get(f"ch_{i}_label", provider)
+        if provider == "webhook":
+            config = {"url": data.get(f"ch_{i}_url", "")}
+        elif provider == "telegram":
+            config = {"chat_id": data.get(f"ch_{i}_chat_id", "").strip()}
+        elif provider == "discord":
+            config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        else:
+            i += 1
+            continue
+
+        has_value = any(config.values())
+        if not has_value and not channel_id:
+            i += 1
+            continue
+
+        if channel_id:
+            ch = NotificationChannel.objects.get(pk=channel_id, monitor=monitor)
+            ch.provider = provider
+            ch.label = label
+            ch.config = config
+            ch.save()
+            kept_ids.append(ch.pk)
+        else:
+            ch = NotificationChannel.objects.create(
+                monitor=monitor, provider=provider, label=label, config=config
+            )
+            kept_ids.append(ch.pk)
+        i += 1
+
+    monitor.channels.exclude(pk__in=kept_ids).delete()

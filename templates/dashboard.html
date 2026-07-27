@@ -92,7 +92,7 @@
         </div>
         <div class="mb-3">
           <label class="form-label">URL</label>
-          <input type="url" name="url" class="form-control" placeholder="https://example.com" required>
+          <input type="url" name="url" class="form-control" value="https://" required>
         </div>
         <div class="row">
           <div class="col-md-6 mb-3">
@@ -121,6 +121,16 @@
           <input type="range" name="timeout" class="form-range" value="10" min="1" max="30" step="1"
                  oninput="document.getElementById('timeoutVal').textContent=this.value">
         </div>
+        <div class="px-3 pb-3">
+          <div class="form-check mb-2">
+            <input type="checkbox" name="email_alerts" class="form-check-input" id="addEmailAlerts" checked>
+            <label class="form-check-label" for="addEmailAlerts">Send email alerts</label>
+          </div>
+          <label class="form-label">Channels <span class="text-muted">(optional)</span></label>
+          <div id="addChannelsContainer">
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addAddChannel()">+ Add channel</button>
+        </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -130,4 +140,50 @@
   </div>
 </div>
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let addChannelIndex = 0;
+
+function addAddChannel() {
+  const i = addChannelIndex++;
+  const html = `
+    <div class="channel-row border rounded p-2 mb-2" data-index="${i}">
+      <div class="row g-1 align-items-center">
+        <div class="col-4">
+          <select name="ch_${i}_provider" class="form-select form-select-sm ch-provider" onchange="updateAddChannelFields(this)">
+            <option value="webhook">Webhook</option>
+            <option value="telegram">Telegram</option>
+            <option value="discord">Discord</option>
+          </select>
+        </div>
+        <div class="col-3">
+          <input type="text" name="ch_${i}_label" class="form-control form-control-sm" placeholder="Label">
+        </div>
+        <div class="col-4 ch-fields">
+          <input type="url" name="ch_${i}_url" class="form-control form-control-sm" placeholder="Webhook URL">
+        </div>
+        <div class="col-1 text-end">
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.channel-row').remove()">&times;</button>
+        </div>
+      </div>
+    </div>`;
+  document.getElementById('addChannelsContainer').insertAdjacentHTML('beforeend', html);
+}
+
+function updateAddChannelFields(select) {
+  const row = select.closest('.channel-row');
+  const i = row.dataset.index;
+  const fields = row.querySelector('.ch-fields');
+  const v = select.value;
+  if (v === 'webhook') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'telegram') {
+    fields.innerHTML = `<div class="d-flex gap-1"><input type="text" name="ch_${i}_chat_id" class="form-control form-control-sm" placeholder="Chat ID (e.g. -1001234567890)"><a href="{% url 'telegram_connect' %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Find my Chat ID">?</a></div>`;
+  } else if (v === 'discord') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  }
+}
+</script>
 {% endblock %}
