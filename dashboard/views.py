@@ -7,6 +7,7 @@ import socket
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
+from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -180,7 +181,9 @@ def monitor_detail(request, monitor_id):
         label = seg_start.strftime("%H:%M" if days == 1 else "%m-%d")
         aggregated_bar.append({"label": label, "pct": pct})
 
-    heartbeats = list(heartbeats_qs[:100])
+    paginator = Paginator(heartbeats_qs, 50)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
 
     hb_list = list(heartbeats_qs.order_by("checked_at")[:100].values(
         "checked_at", "response_time_ms", "status"
@@ -198,7 +201,8 @@ def monitor_detail(request, monitor_id):
 
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
-        "heartbeats": heartbeats,
+        "heartbeats": page_obj.object_list,
+        "page_obj": page_obj,
         "incidents": incidents,
         "uptime": uptime,
         "uptime_color": uptime_color,
@@ -254,7 +258,9 @@ def public_monitor_detail(request, token):
         label = seg_start.strftime("%H:%M" if days == 1 else "%m-%d")
         aggregated_bar.append({"label": label, "pct": pct})
 
-    heartbeats = list(heartbeats_qs[:100])
+    paginator = Paginator(heartbeats_qs, 50)
+    page_number = request.GET.get("page", 1)
+    page_obj = paginator.get_page(page_number)
 
     hb_list = list(heartbeats_qs.order_by("checked_at")[:100].values(
         "checked_at", "response_time_ms", "status"
@@ -272,7 +278,8 @@ def public_monitor_detail(request, token):
 
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
-        "heartbeats": heartbeats,
+        "heartbeats": page_obj.object_list,
+        "page_obj": page_obj,
         "incidents": incidents,
         "uptime": uptime,
         "uptime_color": uptime_color,
