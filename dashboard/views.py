@@ -18,6 +18,8 @@ from datetime import timedelta, datetime
 import httpx
 
 from django.conf import settings as django_settings
+from django.contrib.auth.models import User
+from allauth.socialaccount.models import SocialAccount
 
 from accounts.models import Profile
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel
@@ -320,7 +322,16 @@ def export_heartbeats_csv(request, monitor_id):
 @login_required
 def settings(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
+    social_accounts = SocialAccount.objects.filter(user=request.user)
+
     if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "delete_account":
+            request.user.delete()
+            messages.success(request, "Account deleted.")
+            return redirect("/")
+
         first_name = request.POST.get("first_name", "").strip()
         if first_name:
             request.user.first_name = first_name
@@ -328,12 +339,19 @@ def settings(request):
 
         if "avatar" in request.FILES:
             profile.avatar = request.FILES["avatar"]
-            profile.save()
 
+        tz = request.POST.get("timezone", "").strip()
+        if tz:
+            profile.timezone = tz
+
+        profile.save()
         messages.success(request, "Settings saved.")
         return redirect("settings")
 
-    return render(request, "settings.html", {"profile": profile})
+    return render(request, "settings.html", {
+        "profile": profile,
+        "social_accounts": social_accounts,
+    })
 
 
 @login_required

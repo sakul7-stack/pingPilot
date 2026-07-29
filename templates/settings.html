@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 
+{% load socialaccount %}
+
 {% block content %}
 
 <div class="container mt-4" style="max-width:600px;">
@@ -49,9 +51,58 @@
     <button type="submit" class="btn btn-success w-100 mb-3">Save Changes</button>
   </form>
 
+  <div class="card mb-3 border-white">
+    <div class="card-header">Account</div>
+    <div class="card-body">
+      <div class="mb-2"><strong>Email:</strong> {{ user.email }}</div>
+      <div class="mb-2"><strong>Member since:</strong> {{ user.date_joined|date:"F j, Y" }}</div>
+      <div><strong>Login providers:</strong></div>
+      <ul class="mb-0">
+        {% for account in social_accounts %}
+          <li>{{ account.provider|title }}</li>
+        {% empty %}
+          <li>Email / Password</li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="card mb-3 border-white">
+      <div class="card-header">Timezone</div>
+      <div class="card-body">
+        <select name="timezone" class="form-control">
+          <option value="UTC" {% if profile.timezone == "UTC" %}selected{% endif %}>UTC</option>
+          <option value="US/Eastern" {% if profile.timezone == "US/Eastern" %}selected{% endif %}>US/Eastern</option>
+          <option value="US/Central" {% if profile.timezone == "US/Central" %}selected{% endif %}>US/Central</option>
+          <option value="US/Mountain" {% if profile.timezone == "US/Mountain" %}selected{% endif %}>US/Mountain</option>
+          <option value="US/Pacific" {% if profile.timezone == "US/Pacific" %}selected{% endif %}>US/Pacific</option>
+          <option value="Europe/London" {% if profile.timezone == "Europe/London" %}selected{% endif %}>Europe/London</option>
+          <option value="Europe/Berlin" {% if profile.timezone == "Europe/Berlin" %}selected{% endif %}>Europe/Berlin</option>
+          <option value="Europe/Paris" {% if profile.timezone == "Europe/Paris" %}selected{% endif %}>Europe/Paris</option>
+          <option value="Asia/Kolkata" {% if profile.timezone == "Asia/Kolkata" %}selected{% endif %}>Asia/Kolkata</option>
+          <option value="Asia/Kathmandu" {% if profile.timezone == "Asia/Kathmandu" %}selected{% endif %}>Asia/Kathmandu</option>
+          <option value="Asia/Tokyo" {% if profile.timezone == "Asia/Tokyo" %}selected{% endif %}>Asia/Tokyo</option>
+          <option value="Asia/Shanghai" {% if profile.timezone == "Asia/Shanghai" %}selected{% endif %}>Asia/Shanghai</option>
+          <option value="Asia/Dubai" {% if profile.timezone == "Asia/Dubai" %}selected{% endif %}>Asia/Dubai</option>
+          <option value="Australia/Sydney" {% if profile.timezone == "Australia/Sydney" %}selected{% endif %}>Australia/Sydney</option>
+          <option value="Pacific/Auckland" {% if profile.timezone == "Pacific/Auckland" %}selected{% endif %}>Pacific/Auckland</option>
+        </select>
+      </div>
+    </div>
+    <button type="submit" class="btn btn-success w-100 mb-3">Save Changes</button>
+  </form>
+
   <form method="post" action="{% url 'account_logout' %}">
     {% csrf_token %}
-    <button type="submit" class="btn btn-outline-danger w-100">Logout</button>
+    <button type="submit" class="btn btn-outline-danger w-100 mb-3">Logout</button>
+  </form>
+
+  <form method="post" onsubmit="return confirm('Are you sure you want to delete your account? This cannot be undone.');">
+    {% csrf_token %}
+    <input type="hidden" name="action" value="delete_account">
+    <button type="submit" class="btn btn-danger w-100">Delete Account</button>
   </form>
 </div>
 
