@@ -1,7 +1,7 @@
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
-from django.conf.urls.static import static
+from django.views.static import serve
 
 from dashboard import views as dashboard_views
 
@@ -15,4 +15,9 @@ urlpatterns = [
     path("api/monitors/<int:monitor_id>/heartbeats/", dashboard_views.api_monitor_heartbeats, name="api_monitor_heartbeats"),
     path("api/monitors/<int:monitor_id>/incidents/", dashboard_views.api_monitor_incidents, name="api_monitor_incidents"),
     path("api/monitors/<int:monitor_id>/stats/", dashboard_views.api_monitor_stats, name="api_monitor_stats"),
-] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+]
+
+if not settings.DEBUG:
+    urlpatterns += [
+        re_path(r"^media/(?P<path>.*)$", serve, {"document_root": settings.MEDIA_ROOT}),
+    ]
