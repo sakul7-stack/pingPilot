@@ -135,6 +135,14 @@
         <dd class="col-sm-10"><span style="color:var(--pp-danger);">{{ monitor.consecutive_failures }}</span></dd>
         <dt class="col-sm-2">Last Checked</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
+        <dt class="col-sm-2">Channels</dt>
+        <dd class="col-sm-10">
+          {% if monitor.email_alerts %}<span style="color:#5fc9ff;">Email</span>{% if channels %}, {% endif %}{% endif %}
+          {% for ch in channels %}
+            <span style="color:#5fc9ff;">{{ ch.get_provider_display }}{% if ch.label %} ({{ ch.label }}){% endif %}</span>{% if not forloop.last %}, {% endif %}
+          {% endfor %}
+          {% if not monitor.email_alerts and not channels %}<span style="color:var(--pp-muted);">None</span>{% endif %}
+        </dd>
         {% if ssl_info %}
         <dt class="col-sm-2">SSL Expiry</dt>
         <dd class="col-sm-10">
@@ -147,22 +155,6 @@
       </dl>
     </div>
   </div>
-
-  {% if channels %}
-  <div class="card mb-4">
-    <div class="card-header">Notification Channels</div>
-    <div class="card-body">
-      <div class="d-flex flex-wrap gap-2">
-        {% for ch in channels %}
-          <span class="badge bg-info fs-6 px-3 py-2">
-            {{ ch.get_provider_display }}
-            {% if ch.label %} — {{ ch.label }}{% endif %}
-          </span>
-        {% endfor %}
-      </div>
-    </div>
-  </div>
-  {% endif %}
 
   {% if incidents %}
   <div class="card mb-4">
@@ -188,8 +180,8 @@
             <td>{{ inc.opened_at|date:"Y-m-d H:i:s" }} UTC</td>
             <td>{{ inc.closed_at|date:"Y-m-d H:i:s"|default:"Open" }} UTC</td>
             <td>
-              {% if inc.closed_at %}
-                {{ inc.closed_at|timesince:inc.opened_at }}
+              {% if inc.duration_display %}
+                {{ inc.duration_display }}
               {% else %}
                 <span class="text-danger">Ongoing</span>
               {% endif %}

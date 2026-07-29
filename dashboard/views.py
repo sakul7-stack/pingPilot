@@ -203,6 +203,19 @@ def monitor_detail(request, monitor_id):
 
     channels = NotificationChannel.objects.filter(monitor=monitor)
 
+    for inc in incidents:
+        if inc.closed_at:
+            td = inc.closed_at - inc.opened_at
+            total_secs = int(td.total_seconds())
+            hours, remainder = divmod(total_secs, 3600)
+            minutes, _ = divmod(remainder, 60)
+            if hours:
+                inc.duration_display = f"{hours}h {minutes}m"
+            else:
+                inc.duration_display = f"{minutes}m"
+        else:
+            inc.duration_display = None
+
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
         "heartbeats": page_obj.object_list,
