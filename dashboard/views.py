@@ -201,6 +201,8 @@ def monitor_detail(request, monitor_id):
     chart_data = json.dumps([serialize_hb(h) for h in hb_list])
     ssl_info = get_ssl_info(monitor.url)
 
+    channels = NotificationChannel.objects.filter(monitor=monitor)
+
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
         "heartbeats": page_obj.object_list,
@@ -215,6 +217,7 @@ def monitor_detail(request, monitor_id):
         "status_bar": aggregated_bar,
         "chart_data": chart_data,
         "ssl_info": ssl_info,
+        "channels": channels,
     })
 
 
@@ -315,6 +318,31 @@ def export_heartbeats_csv(request, monitor_id):
             hb.response_time_ms or "",
             hb.body_size or "",
             hb.error or "",
+        ])
+    return response
+
+
+@login_required
+def export_incidents_csv(request, monitor_id):
+    monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
+    qs = Incident.objects.filter(monitor=monitor).order_by("-opened_at")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{monitor.name}_incidents.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Opened (UTC)", "Closed (UTC)", "Duration", "Reason"])
+    for inc in qs:
+        duration = ""
+        if inc.closed_at:
+            td = inc.closed_at - inc.opened_at
+            hours, remainder = divmod(int(td.total_seconds()), 3600)
+            minutes, _ = divmod(remainder, 60)
+            duration = f"{hours}h {minutes}m" if hours else f"{minutes}m"
+        writer.writerow([
+            inc.opened_at.strftime("%Y-%m-%d %H:%M:%S"),
+            inc.closed_at.strftime("%Y-%m-%d %H:%M:%S") if inc.closed_at else "Open",
+            duration,
+            inc.reason or "",
         ])
     return response
 

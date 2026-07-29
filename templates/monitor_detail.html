@@ -148,15 +148,37 @@
     </div>
   </div>
 
+  {% if channels %}
+  <div class="card mb-4">
+    <div class="card-header">Notification Channels</div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2">
+        {% for ch in channels %}
+          <span class="badge bg-info fs-6 px-3 py-2">
+            {{ ch.get_provider_display }}
+            {% if ch.label %} — {{ ch.label }}{% endif %}
+          </span>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
   {% if incidents %}
   <div class="card mb-4">
-    <div class="card-header">Incidents</div>
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>Incidents</span>
+      {% if not is_public %}
+      <a href="{% url 'export_incidents' monitor.id %}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+      {% endif %}
+    </div>
     <div class="card-body p-0">
       <table class="table table-sm mb-0">
         <thead>
           <tr>
             <th>Opened</th>
             <th>Closed</th>
+            <th>Duration</th>
             <th>Reason</th>
           </tr>
         </thead>
@@ -165,6 +187,13 @@
           <tr>
             <td>{{ inc.opened_at|date:"Y-m-d H:i:s" }} UTC</td>
             <td>{{ inc.closed_at|date:"Y-m-d H:i:s"|default:"Open" }} UTC</td>
+            <td>
+              {% if inc.closed_at %}
+                {{ inc.closed_at|timesince:inc.opened_at }}
+              {% else %}
+                <span class="text-danger">Ongoing</span>
+              {% endif %}
+            </td>
             <td>{{ inc.reason|default:"—" }}</td>
           </tr>
           {% endfor %}
