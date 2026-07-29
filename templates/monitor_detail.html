@@ -195,6 +195,38 @@
   </div>
   {% endif %}
 
+  {% if alert_logs %}
+  <div class="card mb-4">
+    <div class="card-header">Alert History</div>
+    <div class="card-body p-0">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Event</th>
+            <th>Channel</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in alert_logs %}
+          <tr>
+            <td>{{ log.sent_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td>
+              {% if log.event == "down" %}
+                <span class="badge bg-danger">DOWN</span>
+              {% else %}
+                <span class="badge bg-success">UP</span>
+              {% endif %}
+            </td>
+            <td><span style="color:#5fc9ff;">{{ log.channel|title }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
   <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
       <span>Heartbeat Log</span>

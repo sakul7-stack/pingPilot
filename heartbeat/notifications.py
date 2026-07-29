@@ -5,7 +5,7 @@ from django.utils.html import strip_tags
 from django.utils import timezone
 
 from .enums import CheckResult
-from .models import Monitor
+from .models import Monitor, AlertLog
 from .providers import dispatch
 
 BASE = f"{settings.SITE_URL}/dashboard/"
@@ -19,8 +19,10 @@ def send_down_alert(monitor: Monitor, result: CheckResult) -> None:
     }
     if monitor.email_alerts:
         _send_email(monitor, "down", payload)
+        AlertLog.objects.create(monitor=monitor, event="down", channel="email")
     for ch in monitor.channels.all():
         dispatch(ch.provider, ch.config, payload)
+        AlertLog.objects.create(monitor=monitor, event="down", channel=ch.provider)
 
 
 def send_up_alert(monitor: Monitor) -> None:
@@ -31,8 +33,10 @@ def send_up_alert(monitor: Monitor) -> None:
     }
     if monitor.email_alerts:
         _send_email(monitor, "up", payload)
+        AlertLog.objects.create(monitor=monitor, event="up", channel="email")
     for ch in monitor.channels.all():
         dispatch(ch.provider, ch.config, payload)
+        AlertLog.objects.create(monitor=monitor, event="up", channel=ch.provider)
 
 
 def _send_email(monitor, event: str, payload: dict) -> None:

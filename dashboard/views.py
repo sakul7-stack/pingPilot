@@ -22,7 +22,7 @@ from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
 
 from accounts.models import Profile
-from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel
+from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel, AlertLog
 
 
 @login_required
@@ -202,6 +202,7 @@ def monitor_detail(request, monitor_id):
     ssl_info = get_ssl_info(monitor.url)
 
     channels = NotificationChannel.objects.filter(monitor=monitor)
+    alert_logs = AlertLog.objects.filter(monitor=monitor)[:50]
 
     for inc in incidents:
         if inc.closed_at:
@@ -231,6 +232,7 @@ def monitor_detail(request, monitor_id):
         "chart_data": chart_data,
         "ssl_info": ssl_info,
         "channels": channels,
+        "alert_logs": alert_logs,
     })
 
 

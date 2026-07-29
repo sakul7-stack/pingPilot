@@ -107,3 +107,17 @@ class NotificationChannel(models.Model):
 
     class Meta:
         ordering=["provider"]
+
+
+class AlertLog(models.Model):
+    EVENT_CHOICES = [
+        ("down", "Down Alert"),
+        ("up", "Recovery Alert"),
+    ]
+    monitor = models.ForeignKey(Monitor, on_delete=models.CASCADE, related_name="alert_logs")
+    event = models.CharField(max_length=10, choices=EVENT_CHOICES)
+    channel = models.CharField(max_length=50, blank=True, default="email")
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-sent_at"]
