@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+  <h2 class="mb-1">API Documentation</h2>
+  <p class="text-muted mb-4">Programmatically access your monitor data via the PingPilot REST API.</p>
+
+  <div class="row">
+    <div class="col-lg-3 mb-4">
+      <div class="card">
+        <div class="card-header">Sections</div>
+        <div class="list-group list-group-flush" style="border-radius:0;">
+          <a href="#overview" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Overview</a>
+          <a href="#auth" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Authentication</a>
+          <a href="#monitors" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">List Monitors</a>
+          <a href="#monitor-detail" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Monitor Details</a>
+          <a href="#heartbeats" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Heartbeat Log</a>
+          <a href="#incidents" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Incidents</a>
+          <a href="#stats" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Monitor Stats</a>
+          <a href="#sandbox" class="list-group-item list-group-item-action" style="background:transparent;color:var(--pp-text);border-color:var(--pp-border);">Sandbox</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-9">
+
+      <section id="overview" class="card mb-4">
+        <div class="card-header"><strong>Overview</strong></div>
+        <div class="card-body">
+          <p>The PingPilot API is a read-only REST API that lets you retrieve your monitor data. All requests return JSON and require authentication via an API key.</p>
+          <p><strong>Base URL:</strong> <code style="user-select:all;">{{ site_url }}/api/</code></p>
+        </div>
+      </section>
+
+      <section id="auth" class="card mb-4">
+        <div class="card-header"><strong>Authentication</strong></div>
+        <div class="card-body">
+          <p>Every request must include your API key in the <code>X-API-Key</code> header:</p>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_YOUR_KEY_HERE" {{ site_url }}/api/monitors/</pre>
+          <p class="mb-0 mt-3">Keys are managed from the <a href="{% url 'api_keys' %}">API Keys page</a>. You can create multiple named keys and revoke them individually.</p>
+        </div>
+      </section>
+
+      <section id="monitors" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>List Monitors</strong>
+          <span class="badge bg-success" style="font-size:11px;">GET</span>
+        </div>
+        <div class="card-body">
+          <p>Returns all monitors for your account.</p>
+          <div class="mb-3">
+            <code style="font-size:1rem;">GET /api/monitors/</code>
+          </div>
+          <h6 style="color:var(--pp-signal);">Example Request</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Example Response</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;">[
+  {
+    "id": 1,
+    "name": "My Website",
+    "url": "https://example.com",
+    "method": "GET",
+    "expected_status": 200,
+    "check_interval_seconds": 60,
+    "last_status": "UP",
+    "last_checked_at": "2026-07-30T12:00:00Z",
+    "is_active": true,
+    "created_at": "2026-01-15T08:30:00Z"
+  }
+]</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Response Fields</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>int</td><td>Unique monitor ID</td></tr>
+              <tr><td><code>name</code></td><td>string</td><td>Monitor display name</td></tr>
+              <tr><td><code>url</code></td><td>string</td><td>Target URL being monitored</td></tr>
+              <tr><td><code>method</code></td><td>string</td><td>HTTP method (GET, POST, etc.)</td></tr>
+              <tr><td><code>expected_status</code></td><td>int</td><td>Expected HTTP status code</td></tr>
+              <tr><td><code>check_interval_seconds</code></td><td>int</td><td>Check interval in seconds</td></tr>
+              <tr><td><code>last_status</code></td><td>string</td><td>UP, DOWN, DEGRADED, or null</td></tr>
+              <tr><td><code>last_checked_at</code></td><td>datetime</td><td>Last check timestamp (ISO 8601)</td></tr>
+              <tr><td><code>is_active</code></td><td>bool</td><td>Whether monitoring is active</td></tr>
+              <tr><td><code>created_at</code></td><td>datetime</td><td>Creation timestamp</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="monitor-detail" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>Monitor Details</strong>
+          <span class="badge bg-success" style="font-size:11px;">GET</span>
+        </div>
+        <div class="card-body">
+          <p>Returns detailed information for a single monitor.</p>
+          <div class="mb-3">
+            <code style="font-size:1rem;">GET /api/monitors/&lt;id&gt;/</code>
+          </div>
+          <h6 style="color:var(--pp-signal);">Example Request</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/1/</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Example Response</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;">{
+  "id": 1,
+  "name": "My Website",
+  "url": "https://example.com",
+  "method": "GET",
+  "expected_status": 200,
+  "expected_keyword": "Welcome",
+  "timeout": 10,
+  "check_interval_seconds": 60,
+  "last_status": "UP",
+  "last_checked_at": "2026-07-30T12:00:00Z",
+  "is_active": true,
+  "created_at": "2026-01-15T08:30:00Z"
+}</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Response Fields</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>int</td><td>Unique monitor ID</td></tr>
+              <tr><td><code>name</code></td><td>string</td><td>Monitor display name</td></tr>
+              <tr><td><code>url</code></td><td>string</td><td>Target URL being monitored</td></tr>
+              <tr><td><code>method</code></td><td>string</td><td>HTTP method</td></tr>
+              <tr><td><code>expected_status</code></td><td>int</td><td>Expected HTTP status code</td></tr>
+              <tr><td><code>expected_keyword</code></td><td>string</td><td>Optional expected keyword in response</td></tr>
+              <tr><td><code>timeout</code></td><td>int</td><td>Request timeout in seconds</td></tr>
+              <tr><td><code>check_interval_seconds</code></td><td>int</td><td>Check interval in seconds</td></tr>
+              <tr><td><code>last_status</code></td><td>string</td><td>UP, DOWN, DEGRADED, or null</td></tr>
+              <tr><td><code>last_checked_at</code></td><td>datetime</td><td>Last check timestamp (ISO 8601)</td></tr>
+              <tr><td><code>is_active</code></td><td>bool</td><td>Whether monitoring is active</td></tr>
+              <tr><td><code>created_at</code></td><td>datetime</td><td>Creation timestamp</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="heartbeats" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>Heartbeat Log</strong>
+          <span class="badge bg-success" style="font-size:11px;">GET</span>
+        </div>
+        <div class="card-body">
+          <p>Returns the heartbeat (check) log for a monitor. Ordered by most recent first, limited to 100 entries.</p>
+          <div class="mb-3">
+            <code style="font-size:1rem;">GET /api/monitors/&lt;id&gt;/heartbeats/</code><br>
+            <code style="font-size:1rem;">GET /api/monitors/&lt;id&gt;/heartbeats/?days=7</code>
+          </div>
+          <h6 style="color:var(--pp-signal);">Query Parameters</h6>
+          <table class="table table-sm mb-3">
+            <thead>
+              <tr><th>Parameter</th><th>Type</th><th>Default</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>days</code></td><td>int</td><td>1</td><td>Number of days of heartbeats to return</td></tr>
+            </tbody>
+          </table>
+          <h6 style="color:var(--pp-signal);">Example Request</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/1/heartbeats/?days=7</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Example Response</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;">[
+  {
+    "status": "UP",
+    "status_code": 200,
+    "error": null,
+    "response_time_ms": 145.23,
+    "body_size": 12540,
+    "checked_at": "2026-07-30T12:00:00Z"
+  },
+  {
+    "status": "DOWN",
+    "status_code": null,
+    "error": "Connection timeout",
+    "response_time_ms": null,
+    "body_size": null,
+    "checked_at": "2026-07-30T11:55:00Z"
+  }
+]</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Response Fields</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>status</code></td><td>string</td><td>UP, DOWN, or DEGRADED</td></tr>
+              <tr><td><code>status_code</code></td><td>int</td><td>HTTP status code (null on failure)</td></tr>
+              <tr><td><code>error</code></td><td>string</td><td>Error message if check failed</td></tr>
+              <tr><td><code>response_time_ms</code></td><td>float</td><td>Response time in milliseconds</td></tr>
+              <tr><td><code>body_size</code></td><td>int</td><td>Response body size in bytes</td></tr>
+              <tr><td><code>checked_at</code></td><td>datetime</td><td>Check timestamp (ISO 8601)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="incidents" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>Incidents</strong>
+          <span class="badge bg-success" style="font-size:11px;">GET</span>
+        </div>
+        <div class="card-body">
+          <p>Returns all incidents for a monitor. Ordered by most recent first.</p>
+          <div class="mb-3">
+            <code style="font-size:1rem;">GET /api/monitors/&lt;id&gt;/incidents/</code>
+          </div>
+          <h6 style="color:var(--pp-signal);">Example Request</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/1/incidents/</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Example Response</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;">[
+  {
+    "id": 1,
+    "opened_at": "2026-07-25T07:58:45Z",
+    "closed_at": "2026-07-25T08:28:54Z",
+    "reason": "Resolved"
+  },
+  {
+    "id": 2,
+    "opened_at": "2026-07-25T15:11:56Z",
+    "closed_at": null,
+    "reason": "Resolved"
+  }
+]</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Response Fields</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>int</td><td>Unique incident ID</td></tr>
+              <tr><td><code>opened_at</code></td><td>datetime</td><td>When the incident started (ISO 8601)</td></tr>
+              <tr><td><code>closed_at</code></td><td>datetime</td><td>When it resolved, or null if ongoing</td></tr>
+              <tr><td><code>reason</code></td><td>string</td><td>Resolution reason</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="stats" class="card mb-4">
+        <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+          <strong>Monitor Stats</strong>
+          <span class="badge bg-success" style="font-size:11px;">GET</span>
+        </div>
+        <div class="card-body">
+          <p>Returns aggregate statistics for a monitor.</p>
+          <div class="mb-3">
+            <code style="font-size:1rem;">GET /api/monitors/&lt;id&gt;/stats/</code>
+          </div>
+          <h6 style="color:var(--pp-signal);">Example Request</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:14px;">curl -H "X-API-Key: pp_..." {{ site_url }}/api/monitors/1/stats/</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Example Response</h6>
+          <pre style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.5;">{
+  "total_checks": 12540,
+  "up_checks": 12480,
+  "uptime_pct": 99.52,
+  "current_status": "UP",
+  "is_active": true
+}</pre>
+          <h6 style="color:var(--pp-signal);" class="mt-3">Response Fields</h6>
+          <table class="table table-sm">
+            <thead>
+              <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>total_checks</code></td><td>int</td><td>Total checks performed</td></tr>
+              <tr><td><code>up_checks</code></td><td>int</td><td>Number of successful (UP) checks</td></tr>
+              <tr><td><code>uptime_pct</code></td><td>float</td><td>Uptime percentage (all-time)</td></tr>
+              <tr><td><code>current_status</code></td><td>string</td><td>Current monitor status</td></tr>
+              <tr><td><code>is_active</code></td><td>bool</td><td>Whether monitoring is active</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="sandbox" class="card mb-4">
+        <div class="card-header"><strong>Sandbox</strong></div>
+        <div class="card-body">
+          <p>Test API endpoints directly from your browser. Enter your API key, choose an endpoint, and send a live request.</p>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:500;">API Key</label>
+            <input type="text" id="sandbox-key" class="form-control" placeholder="pp_your_api_key_here" style="font-family:monospace;max-width:500px;">
+            <div class="form-text">Your API key from the <a href="{% url 'api_keys' %}">API Keys page</a>.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:500;">Endpoint</label>
+            <select id="sandbox-endpoint" class="form-select" style="max-width:500px;">
+              <option value="/api/monitors/">GET /api/monitors/</option>
+              <option value="/api/monitors/1/">GET /api/monitors/&lt;id&gt;/</option>
+              <option value="/api/monitors/1/heartbeats/?days=1">GET /api/monitors/&lt;id&gt;/heartbeats/?days=1</option>
+              <option value="/api/monitors/1/heartbeats/?days=7">GET /api/monitors/&lt;id&gt;/heartbeats/?days=7</option>
+              <option value="/api/monitors/1/incidents/">GET /api/monitors/&lt;id&gt;/incidents/</option>
+              <option value="/api/monitors/1/stats/">GET /api/monitors/&lt;id&gt;/stats/</option>
+            </select>
+            <div class="form-text">Select an endpoint to test. Replace <code>&lt;id&gt;</code> with an actual monitor ID from your account.</div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" style="font-weight:500;">Request URL</label>
+            <input type="text" id="sandbox-url" class="form-control" value="{{ site_url }}/api/monitors/" readonly style="font-family:monospace;background:#1a1a2e;color:var(--pp-signal);">
+          </div>
+
+          <button id="sandbox-send" class="btn btn-success mb-3">Send Request</button>
+
+          <div id="sandbox-loading" style="display:none;" class="mb-3">
+            <span class="spinner-border spinner-border-sm me-2" role="status"></span>Sending request...
+          </div>
+
+          <label class="form-label" style="font-weight:500;">Response</label>
+          <div id="sandbox-response" style="background:#1a1a2e;padding:14px 18px;border-radius:8px;overflow-x:auto;font-size:13px;line-height:1.6;min-height:100px;font-family:monospace;white-space:pre-wrap;color:var(--pp-muted);">
+            Send a request to see the response here.
+          </div>
+          <div id="sandbox-status" class="mt-2" style="font-size:14px;"></div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var baseUrl = '{{ site_url }}';
+  var keyInput = document.getElementById('sandbox-key');
+  var endpointSelect = document.getElementById('sandbox-endpoint');
+  var urlInput = document.getElementById('sandbox-url');
+  var sendBtn = document.getElementById('sandbox-send');
+  var responseEl = document.getElementById('sandbox-response');
+  var statusEl = document.getElementById('sandbox-status');
+  var loadingEl = document.getElementById('sandbox-loading');
+
+  function updateUrl() {
+    urlInput.value = baseUrl + endpointSelect.value;
+  }
+  endpointSelect.addEventListener('change', updateUrl);
+
+  sendBtn.addEventListener('click', function() {
+    var key = keyInput.value.trim();
+    if (!key) {
+      responseEl.textContent = 'Please enter your API key.';
+      responseEl.style.color = '#FF5C6C';
+      return;
+    }
+    if (!key.startsWith('pp_')) {
+      responseEl.textContent = 'Invalid API key format. It should start with "pp_".';
+      responseEl.style.color = '#FF5C6C';
+      return;
+    }
+
+    var url = urlInput.value;
+    loadingEl.style.display = 'block';
+    sendBtn.disabled = true;
+    responseEl.textContent = '';
+    responseEl.style.color = 'var(--pp-muted)';
+    statusEl.textContent = '';
+
+    fetch(url, {
+      headers: {
+        'X-API-Key': key
+      }
+    })
+    .then(function(res) {
+      var statusText = 'Status: ' + res.status + ' ' + res.statusText;
+      if (res.ok) {
+        statusEl.innerHTML = '<span style="color:var(--pp-signal);">' + statusText + '</span>';
+      } else {
+        statusEl.innerHTML = '<span style="color:#FF5C6C;">' + statusText + '</span>';
+      }
+      return res.text();
+    })
+    .then(function(text) {
+      try {
+        var parsed = JSON.parse(text);
+        responseEl.textContent = JSON.stringify(parsed, null, 2);
+        responseEl.style.color = '#E7ECF5';
+      } catch(e) {
+        responseEl.textContent = text;
+        responseEl.style.color = '#E7ECF5';
+      }
+    })
+    .catch(function(err) {
+      responseEl.textContent = 'Request failed: ' + err.message;
+      responseEl.style.color = '#FF5C6C';
+    })
+    .finally(function() {
+      loadingEl.style.display = 'none';
+      sendBtn.disabled = false;
+    });
+  });
+
+  updateUrl();
+})();
+</script>
+{% endblock %}

@@ -441,6 +441,13 @@ def revoke_api_key(request, key_id):
     return redirect("api_keys")
 
 
+@login_required
+def api_docs(request):
+    return render(request, "api_docs.html", {
+        "site_url": django_settings.SITE_URL,
+    })
+
+
 def api_auth(request):
     auth = request.headers.get("X-API-Key", "")
     if not auth.startswith("pp_"):
