@@ -624,6 +624,8 @@ def _save_channels(monitor, data, user=None):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         elif provider == "teams":
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "pushover":
+            config = {"user_key": data.get(f"ch_{i}_user_key", "").strip()}
         else:
             i += 1
             continue

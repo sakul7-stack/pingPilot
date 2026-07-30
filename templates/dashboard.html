@@ -158,6 +158,7 @@ function addAddChannel() {
             <option value="discord">Discord</option>
             <option value="slack">Slack</option>
             <option value="teams">Microsoft Teams</option>
+            <option value="pushover">Pushover</option>
           </select>
         </div>
         <div class="col-3">
@@ -189,6 +190,8 @@ function updateAddChannelFields(select) {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'teams') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'pushover') {
+    fields.innerHTML = `<input type="text" name="ch_${i}_user_key" class="form-control form-control-sm" placeholder="User Key">`;
   }
 }
 </script>

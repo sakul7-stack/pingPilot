@@ -33,6 +33,7 @@ ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 SITE_URL = os.getenv("SITE_URL", "http://127.0.0.1:8000")
 TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
+PUSHOVER_APP_TOKEN = os.getenv("PUSHOVER_TOKEN")
 CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
 

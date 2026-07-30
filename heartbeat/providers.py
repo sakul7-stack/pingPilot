@@ -83,6 +83,29 @@ def send_slack(config: dict, payload: dict) -> None:
         logger.error("Slack failed: %s", e)
 
 
+def send_pushover(config: dict, payload: dict) -> None:
+    from django.conf import settings
+    token = settings.PUSHOVER_APP_TOKEN
+    user_key = config.get("user_key")
+    if not token or not user_key:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    title = f"{'\U0001f6a8 DOWN' if is_down else '\u2705 UP'}: {m['name']}"
+    message = (
+        f"{m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) + '\nTime: ' + payload['result']['checked_at'] if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(
+            "https://api.pushover.net/1/messages.json",
+            data={"token": token, "user": user_key, "title": title, "message": message},
+            timeout=15,
+        ).raise_for_status()
+    except Exception as e:
+        logger.error("Pushover failed: %s", e)
+
+
 def send_teams(config: dict, payload: dict) -> None:
     url = config.get("webhook_url")
     if not url:
@@ -114,6 +137,7 @@ DISPATCHERS = {
     "discord": send_discord,
     "slack": send_slack,
     "teams": send_teams,
+    "pushover": send_pushover,
 }
 
 
