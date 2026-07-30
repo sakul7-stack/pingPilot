@@ -182,6 +182,32 @@ def send_zulip(config: dict, payload: dict) -> None:
         logger.error("Zulip failed: %s", e)
 
 
+def send_pagerduty(config: dict, payload: dict) -> None:
+    routing_key = config.get("routing_key")
+    if not routing_key:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    body = {
+        "routing_key": routing_key,
+        "event_action": "trigger" if is_down else "resolve",
+        "payload": {
+            "summary": f"{'DOWN' if is_down else 'UP'}: {m['name']}",
+            "severity": "critical" if is_down else "info",
+            "source": m["url"],
+            "custom_details": {"status_code": payload.get("result", {}).get("status_code")} if is_down else {},
+        },
+    }
+    try:
+        httpx.post(
+            "https://events.pagerduty.com/v2/enqueue",
+            json=body,
+            timeout=15,
+        ).raise_for_status()
+    except Exception as e:
+        logger.error("PagerDuty failed: %s", e)
+
+
 DISPATCHERS = {
     "webhook": send_webhook,
     "telegram": send_telegram,
@@ -192,6 +218,7 @@ DISPATCHERS = {
     "googlechat": send_googlechat,
     "mattermost": send_mattermost,
     "zulip": send_zulip,
+    "pagerduty": send_pagerduty,
 }
 
 

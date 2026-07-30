@@ -632,6 +632,8 @@ def _save_channels(monitor, data, user=None):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         elif provider == "zulip":
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "pagerduty":
+            config = {"routing_key": data.get(f"ch_{i}_routing_key", "").strip()}
         else:
             i += 1
             continue

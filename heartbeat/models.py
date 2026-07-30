@@ -101,6 +101,7 @@ class NotificationChannel(models.Model):
         ("googlechat","Google Chat"),
         ("mattermost","Mattermost"),
         ("zulip","Zulip"),
+        ("pagerduty","PagerDuty"),
     ]
 
     monitor=models.ForeignKey(

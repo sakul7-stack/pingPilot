@@ -79,6 +79,7 @@
                     <option value="googlechat" {% if ch.provider == 'googlechat' %}selected{% endif %}>Google Chat</option>
                     <option value="mattermost" {% if ch.provider == 'mattermost' %}selected{% endif %}>Mattermost</option>
                     <option value="zulip" {% if ch.provider == 'zulip' %}selected{% endif %}>Zulip</option>
+                    <option value="pagerduty" {% if ch.provider == 'pagerduty' %}selected{% endif %}>PagerDuty</option>
                   </select>
                 </div>
                 <div class="col-3">
@@ -106,6 +107,8 @@
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% elif ch.provider == 'zulip' %}
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
+                  {% elif ch.provider == 'pagerduty' %}
+                    <input type="text" name="ch_{{ forloop.counter0 }}_routing_key" class="form-control form-control-sm" placeholder="Integration Key" value="{{ ch.config.routing_key }}">
                   {% endif %}
                 </div>
                 <div class="col-1 text-end">
@@ -145,6 +148,7 @@ function addChannel() {
             <option value="googlechat">Google Chat</option>
             <option value="mattermost">Mattermost</option>
             <option value="zulip">Zulip</option>
+            <option value="pagerduty">PagerDuty</option>
           </select>
         </div>
         <div class="col-3">
@@ -184,6 +188,8 @@ function updateChannelFields(select) {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'zulip') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'pagerduty') {
+    fields.innerHTML = `<input type="text" name="ch_${i}_routing_key" class="form-control form-control-sm" placeholder="Integration Key">`;
   }
 }
 </script>
