@@ -159,6 +159,9 @@ function addAddChannel() {
             <option value="slack">Slack</option>
             <option value="teams">Microsoft Teams</option>
             <option value="pushover">Pushover</option>
+            <option value="googlechat">Google Chat</option>
+            <option value="mattermost">Mattermost</option>
+            <option value="zulip">Zulip</option>
           </select>
         </div>
         <div class="col-3">
@@ -192,6 +195,12 @@ function updateAddChannelFields(select) {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'pushover') {
     fields.innerHTML = `<input type="text" name="ch_${i}_user_key" class="form-control form-control-sm" placeholder="User Key">`;
+  } else if (v === 'googlechat') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'mattermost') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'zulip') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   }
 }
 </script>

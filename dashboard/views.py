@@ -626,6 +626,12 @@ def _save_channels(monitor, data, user=None):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         elif provider == "pushover":
             config = {"user_key": data.get(f"ch_{i}_user_key", "").strip()}
+        elif provider == "googlechat":
+            config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "mattermost":
+            config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "zulip":
+            config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         else:
             i += 1
             continue

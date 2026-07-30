@@ -76,6 +76,9 @@
                     <option value="slack" {% if ch.provider == 'slack' %}selected{% endif %}>Slack</option>
                     <option value="teams" {% if ch.provider == 'teams' %}selected{% endif %}>Microsoft Teams</option>
                     <option value="pushover" {% if ch.provider == 'pushover' %}selected{% endif %}>Pushover</option>
+                    <option value="googlechat" {% if ch.provider == 'googlechat' %}selected{% endif %}>Google Chat</option>
+                    <option value="mattermost" {% if ch.provider == 'mattermost' %}selected{% endif %}>Mattermost</option>
+                    <option value="zulip" {% if ch.provider == 'zulip' %}selected{% endif %}>Zulip</option>
                   </select>
                 </div>
                 <div class="col-3">
@@ -97,6 +100,12 @@
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% elif ch.provider == 'pushover' %}
                     <input type="text" name="ch_{{ forloop.counter0 }}_user_key" class="form-control form-control-sm" placeholder="User Key" value="{{ ch.config.user_key }}">
+                  {% elif ch.provider == 'googlechat' %}
+                    <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
+                  {% elif ch.provider == 'mattermost' %}
+                    <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
+                  {% elif ch.provider == 'zulip' %}
+                    <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% endif %}
                 </div>
                 <div class="col-1 text-end">
@@ -133,6 +142,9 @@ function addChannel() {
             <option value="slack">Slack</option>
             <option value="teams">Microsoft Teams</option>
             <option value="pushover">Pushover</option>
+            <option value="googlechat">Google Chat</option>
+            <option value="mattermost">Mattermost</option>
+            <option value="zulip">Zulip</option>
           </select>
         </div>
         <div class="col-3">
@@ -166,6 +178,12 @@ function updateChannelFields(select) {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'pushover') {
     fields.innerHTML = `<input type="text" name="ch_${i}_user_key" class="form-control form-control-sm" placeholder="User Key">`;
+  } else if (v === 'googlechat') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'mattermost') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'zulip') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   }
 }
 </script>

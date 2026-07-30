@@ -98,6 +98,9 @@ class NotificationChannel(models.Model):
         ("slack","Slack"),
         ("teams","Microsoft Teams"),
         ("pushover","Pushover"),
+        ("googlechat","Google Chat"),
+        ("mattermost","Mattermost"),
+        ("zulip","Zulip"),
     ]
 
     monitor=models.ForeignKey(

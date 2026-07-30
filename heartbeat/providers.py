@@ -131,6 +131,57 @@ def send_teams(config: dict, payload: dict) -> None:
         logger.error("Teams failed: %s", e)
 
 
+def send_googlechat(config: dict, payload: dict) -> None:
+    url = config.get("webhook_url")
+    if not url:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    text = (
+        f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}\n"
+        f"URL: {m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("Google Chat failed: %s", e)
+
+
+def send_mattermost(config: dict, payload: dict) -> None:
+    url = config.get("webhook_url")
+    if not url:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    text = (
+        f"{'\U0001f6a8' if is_down else '\u2705'} **{'DOWN' if is_down else 'UP'}: {m['name']}**\n"
+        f"URL: {m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("Mattermost failed: %s", e)
+
+
+def send_zulip(config: dict, payload: dict) -> None:
+    url = config.get("webhook_url")
+    if not url:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    content = (
+        f"**{'DOWN' if is_down else 'UP'}**: {m['name']}\n"
+        f"URL: {m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(url, json={"topic": "PingPilot", "content": content}, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("Zulip failed: %s", e)
+
+
 DISPATCHERS = {
     "webhook": send_webhook,
     "telegram": send_telegram,
@@ -138,6 +189,9 @@ DISPATCHERS = {
     "slack": send_slack,
     "teams": send_teams,
     "pushover": send_pushover,
+    "googlechat": send_googlechat,
+    "mattermost": send_mattermost,
+    "zulip": send_zulip,
 }
 
 
