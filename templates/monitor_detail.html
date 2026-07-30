@@ -135,6 +135,7 @@
         <dd class="col-sm-10"><span style="color:var(--pp-danger);">{{ monitor.consecutive_failures }}</span></dd>
         <dt class="col-sm-2">Last Checked</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
+        {% if not is_public %}
         <dt class="col-sm-2">Channels</dt>
         <dd class="col-sm-10">
           {% if monitor.email_alerts %}<span style="color:#5fc9ff;">Email</span>{% if channels %}, {% endif %}{% endif %}
@@ -143,6 +144,7 @@
           {% endfor %}
           {% if not monitor.email_alerts and not channels %}<span style="color:var(--pp-muted);">None</span>{% endif %}
         </dd>
+        {% endif %}
         {% if ssl_info %}
         <dt class="col-sm-2">SSL Expiry</dt>
         <dd class="col-sm-10">
@@ -195,7 +197,7 @@
   </div>
   {% endif %}
 
-  {% if alert_logs %}
+  {% if not is_public and alert_logs %}
   <div class="card mb-4">
     <div class="card-header">Alert History</div>
     <div class="card-body p-0">

@@ -296,6 +296,19 @@ def public_monitor_detail(request, token):
     chart_data = json.dumps([serialize_hb(h) for h in hb_list])
     ssl_info = get_ssl_info(monitor.url)
 
+    for inc in incidents:
+        if inc.closed_at:
+            td = inc.closed_at - inc.opened_at
+            total_secs = int(td.total_seconds())
+            hours, remainder = divmod(total_secs, 3600)
+            minutes, _ = divmod(remainder, 60)
+            if hours:
+                inc.duration_display = f"{hours}h {minutes}m"
+            else:
+                inc.duration_display = f"{minutes}m"
+        else:
+            inc.duration_display = None
+
     return render(request, "monitor_detail.html", {
         "monitor": monitor,
         "heartbeats": page_obj.object_list,
