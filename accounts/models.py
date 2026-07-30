@@ -8,3 +8,9 @@ class Profile(models.Model):
     timezone = models.CharField(max_length=64, default="UTC")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+class TelegramConnection(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="telegram_connection")
+    chat_id = models.BigIntegerField()
+    created_at = models.DateTimeField(auto_now_add=True)

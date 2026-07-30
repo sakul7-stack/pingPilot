@@ -21,7 +21,7 @@ from django.conf import settings as django_settings
 from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
 
-from accounts.models import Profile
+from accounts.models import Profile, TelegramConnection
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel, AlertLog
 
 
@@ -61,7 +61,7 @@ def create_monitor(request):
             expected_keyword=expected_keyword,
             email_alerts=request.POST.get("email_alerts") == "on",
         )
-        _save_channels(monitor, request.POST)
+        _save_channels(monitor, request.POST, user=request.user)
         messages.success(request, f"Monitor '{name}' created.")
     return redirect("dashboard")
 
@@ -106,7 +106,7 @@ def edit_monitor(request, monitor_id):
             monitor.expected_keyword = expected_keyword
             monitor.email_alerts = request.POST.get("email_alerts") == "on"
             monitor.save()
-            _save_channels(monitor, request.POST)
+            _save_channels(monitor, request.POST, user=request.user)
             messages.success(request, f"Monitor '{name}' updated.")
 
         return redirect("dashboard")
@@ -541,35 +541,69 @@ def api_monitor_stats(request, monitor_id):
 
 @login_required
 def telegram_connect(request):
-    chats = []
+    conn = TelegramConnection.objects.filter(user=request.user).first()
+
     if request.method == "POST":
-        token = django_settings.TELEGRAM_BOT_TOKEN
-        if token:
+        action = request.POST.get("action")
+
+        if action == "verify":
+            code = request.session.get("telegram_code")
+            if not code:
+                messages.error(request, "No verification code found. Click 'Get Code' first.")
+                return redirect("telegram_connect")
+
+            token = django_settings.TELEGRAM_BOT_TOKEN
+            if not token:
+                messages.error(request, "Telegram bot not configured.")
+                return redirect("telegram_connect")
+
             try:
                 resp = httpx.get(
                     f"https://api.telegram.org/bot{token}/getUpdates",
                     timeout=10
                 )
                 data = resp.json()
-                seen = set()
+                found = False
                 for update in data.get("result", []):
                     msg = update.get("message", {})
-                    chat = msg.get("chat", {})
-                    cid = chat.get("id")
-                    if cid and cid not in seen:
-                        seen.add(cid)
-                        name = (
-                            chat.get("first_name", "")
-                            or chat.get("title", "")
-                            or str(cid)
-                        )
-                        chats.append({"id": cid, "name": name, "username": chat.get("username", "")})
+                    text = msg.get("text", "").strip()
+                    if text == code:
+                        chat = msg.get("chat", {})
+                        chat_id = chat.get("id")
+                        if chat_id:
+                            TelegramConnection.objects.update_or_create(
+                                user=request.user,
+                                defaults={"chat_id": chat_id}
+                            )
+                            request.session.pop("telegram_code", None)
+                            messages.success(request, f"Telegram connected! Chat ID: {chat_id}")
+                            found = True
+                            break
+                if not found:
+                    messages.error(request, "Code not found. Send the code to @pingpilot_alerts_bot on Telegram, then click Verify.")
             except Exception:
-                pass
-    return render(request, "telegram_connect.html", {"chats": chats})
+                messages.error(request, "Failed to check messages. Try again.")
+
+        elif action == "disconnect":
+            if conn:
+                conn.delete()
+                messages.success(request, "Telegram disconnected.")
+            return redirect("telegram_connect")
+
+        return redirect("telegram_connect")
+
+    code = None
+    if not conn:
+        code = str(secrets.randbelow(1000000)).zfill(6)
+        request.session["telegram_code"] = code
+
+    return render(request, "telegram_connect.html", {
+        "connection": conn,
+        "code": code,
+    })
 
 
-def _save_channels(monitor, data):
+def _save_channels(monitor, data, user=None):
     kept_ids = []
     i = 0
     while f"ch_{i}_provider" in data:
@@ -579,7 +613,11 @@ def _save_channels(monitor, data):
         if provider == "webhook":
             config = {"url": data.get(f"ch_{i}_url", "")}
         elif provider == "telegram":
-            config = {"chat_id": data.get(f"ch_{i}_chat_id", "").strip()}
+            conn = TelegramConnection.objects.filter(user=user).first() if user else None
+            if conn:
+                config = {"chat_id": str(conn.chat_id)}
+            else:
+                config = {"chat_id": data.get(f"ch_{i}_chat_id", "").strip()}
         elif provider == "discord":
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         else:
