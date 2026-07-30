@@ -208,6 +208,48 @@ def send_pagerduty(config: dict, payload: dict) -> None:
         logger.error("PagerDuty failed: %s", e)
 
 
+def _send_webhook_post(url: str, payload: dict, provider_name: str) -> None:
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    text = (
+        f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}\n"
+        f"URL: {m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("%s failed: %s", provider_name, e)
+
+
+def send_ntfy(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "ntfy")
+
+
+def send_gotify(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "Gotify")
+
+
+def send_rocketchat(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "Rocket.Chat")
+
+
+def send_zapier(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "Zapier")
+
+
+def send_make(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "Make")
+
+
+def send_n8n(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "n8n")
+
+
+def send_ifttt(config: dict, payload: dict) -> None:
+    _send_webhook_post(config.get("webhook_url", ""), payload, "IFTTT")
+
+
 DISPATCHERS = {
     "webhook": send_webhook,
     "telegram": send_telegram,
@@ -219,6 +261,13 @@ DISPATCHERS = {
     "mattermost": send_mattermost,
     "zulip": send_zulip,
     "pagerduty": send_pagerduty,
+    "ntfy": send_ntfy,
+    "gotify": send_gotify,
+    "rocketchat": send_rocketchat,
+    "zapier": send_zapier,
+    "make": send_make,
+    "n8n": send_n8n,
+    "ifttt": send_ifttt,
 }
 
 

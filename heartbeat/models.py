@@ -102,6 +102,13 @@ class NotificationChannel(models.Model):
         ("mattermost","Mattermost"),
         ("zulip","Zulip"),
         ("pagerduty","PagerDuty"),
+        ("ntfy","ntfy"),
+        ("gotify","Gotify"),
+        ("rocketchat","Rocket.Chat"),
+        ("zapier","Zapier"),
+        ("make","Make"),
+        ("n8n","n8n"),
+        ("ifttt","IFTTT"),
     ]
 
     monitor=models.ForeignKey(
