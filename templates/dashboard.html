@@ -157,6 +157,7 @@ function addAddChannel() {
             <option value="telegram">Telegram</option>
             <option value="discord">Discord</option>
             <option value="slack">Slack</option>
+            <option value="teams">Microsoft Teams</option>
           </select>
         </div>
         <div class="col-3">
@@ -185,6 +186,8 @@ function updateAddChannelFields(select) {
   } else if (v === 'discord') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'slack') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'teams') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   }
 }

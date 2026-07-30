@@ -83,11 +83,37 @@ def send_slack(config: dict, payload: dict) -> None:
         logger.error("Slack failed: %s", e)
 
 
+def send_teams(config: dict, payload: dict) -> None:
+    url = config.get("webhook_url")
+    if not url:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    title = f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}"
+    text = (
+        f"{m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    card = {
+        "@type": "MessageCard",
+        "@context": "https://schema.org/extensions",
+        "summary": title,
+        "title": title,
+        "text": text,
+        "themeColor": "FF4444" if is_down else "44FF44",
+    }
+    try:
+        httpx.post(url, json=card, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("Teams failed: %s", e)
+
+
 DISPATCHERS = {
     "webhook": send_webhook,
     "telegram": send_telegram,
     "discord": send_discord,
     "slack": send_slack,
+    "teams": send_teams,
 }
 
 

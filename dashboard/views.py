@@ -622,6 +622,8 @@ def _save_channels(monitor, data, user=None):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         elif provider == "slack":
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "teams":
+            config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         else:
             i += 1
             continue

@@ -74,6 +74,7 @@
                     <option value="telegram" {% if ch.provider == 'telegram' %}selected{% endif %}>Telegram</option>
                     <option value="discord" {% if ch.provider == 'discord' %}selected{% endif %}>Discord</option>
                     <option value="slack" {% if ch.provider == 'slack' %}selected{% endif %}>Slack</option>
+                    <option value="teams" {% if ch.provider == 'teams' %}selected{% endif %}>Microsoft Teams</option>
                   </select>
                 </div>
                 <div class="col-3">
@@ -90,6 +91,8 @@
                   {% elif ch.provider == 'discord' %}
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% elif ch.provider == 'slack' %}
+                    <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
+                  {% elif ch.provider == 'teams' %}
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% endif %}
                 </div>
@@ -125,6 +128,7 @@ function addChannel() {
             <option value="telegram">Telegram</option>
             <option value="discord">Discord</option>
             <option value="slack">Slack</option>
+            <option value="teams">Microsoft Teams</option>
           </select>
         </div>
         <div class="col-3">
@@ -153,6 +157,8 @@ function updateChannelFields(select) {
   } else if (v === 'discord') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'slack') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'teams') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   }
 }
