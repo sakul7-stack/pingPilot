@@ -73,6 +73,7 @@
                     <option value="webhook" {% if ch.provider == 'webhook' %}selected{% endif %}>Webhook</option>
                     <option value="telegram" {% if ch.provider == 'telegram' %}selected{% endif %}>Telegram</option>
                     <option value="discord" {% if ch.provider == 'discord' %}selected{% endif %}>Discord</option>
+                    <option value="slack" {% if ch.provider == 'slack' %}selected{% endif %}>Slack</option>
                   </select>
                 </div>
                 <div class="col-3">
@@ -87,6 +88,8 @@
                       <a href="{% url 'telegram_connect' %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Get verification code">Get Code</a>
                     </div>
                   {% elif ch.provider == 'discord' %}
+                    <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
+                  {% elif ch.provider == 'slack' %}
                     <input type="url" name="ch_{{ forloop.counter0 }}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL" value="{{ ch.config.webhook_url }}">
                   {% endif %}
                 </div>
@@ -121,6 +124,7 @@ function addChannel() {
             <option value="webhook">Webhook</option>
             <option value="telegram">Telegram</option>
             <option value="discord">Discord</option>
+            <option value="slack">Slack</option>
           </select>
         </div>
         <div class="col-3">
@@ -147,6 +151,8 @@ function updateChannelFields(select) {
   } else if (v === 'telegram') {
     fields.innerHTML = `<div class="d-flex gap-1"><input type="text" name="ch_${i}_chat_id" class="form-control form-control-sm" placeholder="Chat ID (e.g. -1001234567890)"><a href="{% url 'telegram_connect' %}" target="_blank" class="btn btn-sm btn-outline-primary" title="Get verification code">Get Code</a></div>`;
   } else if (v === 'discord') {
+    fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
+  } else if (v === 'slack') {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   }
 }

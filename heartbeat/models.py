@@ -95,6 +95,7 @@ class NotificationChannel(models.Model):
         ("webhook","Webhook"),
         ("telegram","Telegram"),
         ("discord","Discord"),
+        ("slack","Slack"),
     ]
 
     monitor=models.ForeignKey(

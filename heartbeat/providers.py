@@ -66,10 +66,28 @@ def send_discord(config: dict, payload: dict) -> None:
         logger.error("Discord failed: %s", e)
 
 
+def send_slack(config: dict, payload: dict) -> None:
+    url = config.get("webhook_url")
+    if not url:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    text = (
+        f"{'\U0001f6a8' if is_down else '\u2705'} *{'DOWN' if is_down else 'UP'}: {m['name']}*\n"
+        f"URL: {m['url']}\n"
+        f"{'Status: ' + str(payload['result']['status_code']) + '\nTime: ' + payload['result']['checked_at'] if is_down else 'Recovered: ' + payload['recovered_at']}"
+    )
+    try:
+        httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
+    except Exception as e:
+        logger.error("Slack failed: %s", e)
+
+
 DISPATCHERS = {
     "webhook": send_webhook,
     "telegram": send_telegram,
     "discord": send_discord,
+    "slack": send_slack,
 }
 
 
