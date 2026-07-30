@@ -109,6 +109,12 @@ class NotificationChannel(models.Model):
         ("make","Make"),
         ("n8n","n8n"),
         ("ifttt","IFTTT"),
+        ("chime","Amazon Chime"),
+        ("matrix","Matrix"),
+        ("signl4","SIGNL4"),
+        ("xmatters","xMatters"),
+        ("opsgenie","Opsgenie"),
+        ("splunk","Splunk On-Call"),
     ]
 
     monitor=models.ForeignKey(

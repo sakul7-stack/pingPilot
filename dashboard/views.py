@@ -634,8 +634,12 @@ def _save_channels(monitor, data, user=None):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
         elif provider == "pagerduty":
             config = {"routing_key": data.get(f"ch_{i}_routing_key", "").strip()}
-        elif provider in ("ntfy", "gotify", "rocketchat", "zapier", "make", "n8n", "ifttt"):
+        elif provider in ("ntfy", "gotify", "rocketchat", "zapier", "make", "n8n", "ifttt", "chime", "matrix", "signl4", "xmatters"):
             config = {"webhook_url": data.get(f"ch_{i}_webhook_url", "")}
+        elif provider == "opsgenie":
+            config = {"api_key": data.get(f"ch_{i}_api_key", "").strip()}
+        elif provider == "splunk":
+            config = {"routing_key": data.get(f"ch_{i}_routing_key", "").strip()}
         else:
             i += 1
             continue
