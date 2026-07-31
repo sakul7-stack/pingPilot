@@ -39,8 +39,6 @@
       {% if is_public %}
         <span class="badge bg-info" style="font-size:.85rem;padding:.4rem .8rem;">Shared View</span>
       {% else %}
-      <span id="autoRefreshBadge" class="badge" style="font-size:.85rem;padding:.4rem .8rem;cursor:pointer;" title="Toggle auto-refresh"
-            onclick="toggleAutoRefresh()"></span>
       <button class="btn btn-sm btn-primary" onclick="copyPublicLink()">Get public link</button>
       <a href="{% url 'edit_monitor' monitor.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
       <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
@@ -467,11 +465,9 @@ function copyPublicLink() {
   });
 }
 
-{% if not is_public and monitor.is_active %}
+{% if not is_public and monitor.is_active and auto_refresh %}
 var REFRESH_SECONDS = 20;
-var autoRefreshOn = true;
 var countdownEl = document.getElementById('nextCheckCountdown');
-var refreshBadge = document.getElementById('autoRefreshBadge');
 
 function fmt(secs) {
   secs = Math.max(0, Math.floor(secs));
@@ -482,12 +478,6 @@ function fmt(secs) {
   if (m > 0) return m + 'm ' + s + 's';
   return s + 's';
 }
-
-function updateBadge() {
-  refreshBadge.textContent = autoRefreshOn ? 'Auto-refresh: ' + REFRESH_SECONDS + 's' : 'Auto-refresh: off';
-  refreshBadge.className = 'badge ' + (autoRefreshOn ? 'bg-success' : 'bg-secondary');
-}
-updateBadge();
 
 function tickCountdown() {
   if (!countdownEl) return;
@@ -500,15 +490,10 @@ function tickCountdown() {
 setInterval(tickCountdown, 1000);
 
 setInterval(function() {
-  if (autoRefreshOn && document.visibilityState === 'visible') {
+  if (document.visibilityState === 'visible') {
     window.location.reload();
   }
 }, REFRESH_SECONDS * 1000);
-
-function toggleAutoRefresh() {
-  autoRefreshOn = !autoRefreshOn;
-  updateBadge();
-}
 {% endif %}
 </script>
 {% endblock %}

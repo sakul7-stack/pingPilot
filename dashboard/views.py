@@ -226,6 +226,7 @@ def monitor_detail(request, monitor_id):
 
     channels = NotificationChannel.objects.filter(monitor=monitor)
     alert_logs = AlertLog.objects.filter(monitor=monitor)[:50]
+    profile, _ = Profile.objects.get_or_create(user=request.user)
 
     for inc in incidents:
         if inc.closed_at:
@@ -257,6 +258,7 @@ def monitor_detail(request, monitor_id):
         "channels": channels,
         "alert_logs": alert_logs,
         "next_check_in": next_check_in,
+        "auto_refresh": profile.auto_refresh,
     })
 
 
@@ -444,6 +446,7 @@ def settings(request):
 
         profile.weekly_report = request.POST.get("weekly_report") == "on"
         profile.monthly_report = request.POST.get("monthly_report") == "on"
+        profile.auto_refresh = request.POST.get("auto_refresh") == "on"
 
         profile.save()
         messages.success(request, "Settings saved.")

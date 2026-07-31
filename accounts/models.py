@@ -8,6 +8,7 @@ class Profile(models.Model):
     timezone = models.CharField(max_length=64, default="UTC")
     weekly_report = models.BooleanField(default=True)
     monthly_report = models.BooleanField(default=True)
+    auto_refresh = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

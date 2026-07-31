@@ -109,6 +109,12 @@
             {% if profile.monthly_report %}checked{% endif %}>
           <label class="form-check-label" for="monthlyReport">Monthly summary (1st of month)</label>
         </div>
+        <hr>
+        <div class="form-check">
+          <input type="checkbox" name="auto_refresh" class="form-check-input" id="autoRefresh"
+            {% if profile.auto_refresh %}checked{% endif %}>
+          <label class="form-check-label" for="autoRefresh">Auto-refresh monitor pages every 20s</label>
+        </div>
       </div>
     </div>
     <button type="submit" class="btn btn-success w-100 mb-3">Save Changes</button>
