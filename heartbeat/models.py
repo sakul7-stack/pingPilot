@@ -9,9 +9,20 @@ from .enums import HttpMethod, Status
 
 
 class Monitor(models.Model):
+    CHECK_TYPES = [
+        ("http", "HTTP(S)"),
+        ("tcp", "TCP Port"),
+    ]
+
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     name=models.CharField(max_length=100)
-    url=models.URLField()
+    url=models.CharField(max_length=500)
+    check_type=models.CharField(
+        max_length=10,
+        choices=CHECK_TYPES,
+        default="http",
+    )
+    port=models.PositiveIntegerField(null=True,blank=True)
     method=models.CharField(
         max_length=4,
         choices=HttpMethod.choices,

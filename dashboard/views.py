@@ -99,6 +99,8 @@ def create_monitor(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         url = request.POST.get("url", "").strip()
+        check_type = request.POST.get("check_type", "http")
+        port = request.POST.get("port", "").strip()
         method = request.POST.get("method", "GET")
         expected_status = request.POST.get("expected_status", 200)
         check_interval = request.POST.get("check_interval_seconds", 600)
@@ -118,6 +120,8 @@ def create_monitor(request):
             user=request.user,
             name=name,
             url=url,
+            check_type=check_type,
+            port=int(port) if check_type == "tcp" and port.isdigit() else None,
             method=method,
             expected_status=int(expected_status),
             check_interval_seconds=int(check_interval),
@@ -156,6 +160,8 @@ def edit_monitor(request, monitor_id):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
         url = request.POST.get("url", "").strip()
+        check_type = request.POST.get("check_type", "http")
+        port = request.POST.get("port", "").strip()
         method = request.POST.get("method", "GET")
         expected_status = request.POST.get("expected_status", 200)
         check_interval = request.POST.get("check_interval_seconds", 600)
@@ -166,6 +172,8 @@ def edit_monitor(request, monitor_id):
         if name and url:
             monitor.name = name
             monitor.url = url
+            monitor.check_type = check_type
+            monitor.port = int(port) if check_type == "tcp" and port.isdigit() else None
             monitor.method = method
             monitor.expected_status = int(expected_status)
             monitor.check_interval_seconds = int(check_interval)
@@ -273,7 +281,7 @@ def monitor_detail(request, monitor_id):
         }
 
     chart_data = json.dumps([serialize_hb(h) for h in hb_list])
-    ssl_info = get_ssl_info(monitor.url)
+    ssl_info = get_ssl_info(monitor.url) if monitor.check_type == "http" else None
 
     channels = NotificationChannel.objects.filter(monitor=monitor)
     alert_logs = AlertLog.objects.filter(monitor=monitor)[:50]
@@ -371,7 +379,7 @@ def public_monitor_detail(request, token):
         }
 
     chart_data = json.dumps([serialize_hb(h) for h in hb_list])
-    ssl_info = get_ssl_info(monitor.url)
+    ssl_info = get_ssl_info(monitor.url) if monitor.check_type == "http" else None
 
     for inc in incidents:
         if inc.closed_at:
@@ -616,7 +624,7 @@ def api_monitors(request):
     if not user:
         return JsonResponse({"error": "Unauthorized"}, status=401)
     monitors = Monitor.objects.filter(user=user).values(
-        "id", "name", "url", "method", "expected_status",
+        "id", "name", "url", "check_type", "port", "method", "expected_status",
         "check_interval_seconds", "last_status", "last_checked_at",
         "is_active", "created_at"
     )
@@ -633,6 +641,8 @@ def api_monitor_detail(request, monitor_id):
         "id": monitor.id,
         "name": monitor.name,
         "url": monitor.url,
+        "check_type": monitor.check_type,
+        "port": monitor.port,
         "method": monitor.method,
         "expected_status": monitor.expected_status,
         "expected_keyword": monitor.expected_keyword,

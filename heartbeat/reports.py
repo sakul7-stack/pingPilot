@@ -24,6 +24,8 @@ def _monitor_stats(monitor, days):
     return {
         "name": monitor.name,
         "url": monitor.url,
+        "check_type": monitor.check_type,
+        "port": monitor.port,
         "uptime": round(up / total * 100, 2) if total else None,
         "checks": total,
         "incidents": incidents,
@@ -81,6 +83,8 @@ def check_ssl_expiry():
     now = timezone.now()
     for monitor in Monitor.objects.filter(is_active=True).select_related("user"):
         if not monitor.user.email:
+            continue
+        if monitor.check_type != "http":
             continue
         info = get_ssl_info(monitor.url)
         if not info or info["remaining"] is None:

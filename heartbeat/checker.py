@@ -2,6 +2,7 @@ import asyncio
 import ssl
 import time
 from datetime import datetime
+from urllib.parse import urlparse
 
 import httpx
 
@@ -60,6 +61,8 @@ def _check_result(status: Status, error: str, **kw) -> CheckResult:
 async def check_monitor(
     monitor: Monitor, client: httpx.AsyncClient
 ) -> CheckResult:
+    if monitor.check_type == "tcp":
+        return await check_tcp(monitor)
     started = time.perf_counter()
     method = monitor.method.lower()
     headers = {h["name"]: h["value"] for h in monitor.headers if h.get("name") and h.get("value")}
@@ -114,3 +117,34 @@ async def retry_if_transient(
         )
     except Exception:
         return _check_result(Status.DOWN, error=error)
+
+
+async def check_tcp(monitor: Monitor) -> CheckResult:
+    host = monitor.url.strip().rstrip("/")
+    port = monitor.port
+    if not port:
+        port = 443 if host.startswith("https://") else 80
+    try:
+        parsed = urlparse(host)
+        if parsed.hostname and parsed.scheme:
+            host = parsed.hostname
+            if parsed.port:
+                port = parsed.port
+        started = time.perf_counter()
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(host, port), timeout=monitor.timeout
+        )
+        writer.close()
+        try:
+            await writer.wait_closed()
+        except Exception:
+            pass
+        elapsed = (time.perf_counter() - started) * 1000
+        return _check_result(
+            Status.UP,
+            error="",
+            response_time_ms=elapsed,
+            meta={"host": host, "port": port},
+        )
+    except (asyncio.TimeoutError, OSError) as exc:
+        return _check_result(Status.DOWN, error=f"TCP_ERROR: {type(exc).__name__}")

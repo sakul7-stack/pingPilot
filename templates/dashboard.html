@@ -49,7 +49,13 @@
           {% for m in monitors %}
           <tr>
             <td><a href="{% url 'monitor_detail' m.id %}">{{ m.name }}</a></td>
-            <td><code>{{ m.url }}</code></td>
+            <td>
+              {% if m.check_type == "tcp" %}
+                <span class="badge bg-secondary me-1" title="TCP Port">TCP</span><code>{{ m.url }}:{{ m.port|default:"" }}</code>
+              {% else %}
+                <code>{{ m.url }}</code>
+              {% endif %}
+            </td>
             <td>
               {% if not m.is_active %}
                 <span class="badge bg-secondary">Paused</span>
@@ -117,10 +123,29 @@
           <input type="text" name="name" class="form-control" required>
         </div>
         <div class="mb-3">
+          <label class="form-label">Check Type</label>
+          <select name="check_type" class="form-select" onchange="toggleAddType(this.value)">
+            <option value="http">HTTP(S)</option>
+            <option value="tcp">TCP Port</option>
+          </select>
+        </div>
+        <div class="mb-3" id="addHttpUrlField">
           <label class="form-label">URL</label>
           <input type="url" name="url" class="form-control" value="https://" required>
         </div>
-        <div class="row">
+        <div class="mb-3" id="addTcpFields" style="display:none;">
+          <div class="row">
+            <div class="col-7">
+              <label class="form-label">Host</label>
+              <input type="text" name="url" class="form-control" placeholder="e.g. db.example.com">
+            </div>
+            <div class="col-5">
+              <label class="form-label">Port</label>
+              <input type="number" name="port" class="form-control" value="443" min="1" max="65535">
+            </div>
+          </div>
+        </div>
+        <div class="row" id="addHttpFields">
           <div class="col-md-6 mb-3">
             <label class="form-label">Method</label>
             <select name="method" class="form-select">
@@ -133,18 +158,11 @@
             <input type="number" name="expected_status" class="form-control" value="200">
           </div>
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="addKeywordField">
           <label class="form-label">Expected Keyword <span class="text-muted">(optional)</span></label>
           <input type="text" name="expected_keyword" class="form-control" placeholder="e.g. Welcome">
         </div>
-        <div class="mb-3">
-          <label class="form-label">Group <span class="text-muted">(optional)</span></label>
-          <input type="text" name="group" class="form-control" placeholder="e.g. Production" list="groupList">
-          <datalist id="groupList">
-            {% for g in groups %}<option value="{{ g }}">{% endfor %}
-          </datalist>
-        </div>
-        <div class="mb-3">
+        <div class="mb-3" id="addHeaderField">
           <label class="form-label">Headers <span class="text-muted">(optional)</span></label>
           <div id="addHeadersContainer">
             <div class="row g-1 mb-1" data-header-row>
@@ -160,6 +178,13 @@
             </div>
           </div>
           <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addHeaderRow()">+ Add header</button>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Group <span class="text-muted">(optional)</span></label>
+          <input type="text" name="group" class="form-control" placeholder="e.g. Production" list="groupList">
+          <datalist id="groupList">
+            {% for g in groups %}<option value="{{ g }}">{% endfor %}
+          </datalist>
         </div>
         <div class="mb-3">
           <label class="form-label">Interval: <span id="intervalVal">600</span>s (3 min – 24h)</label>
@@ -196,6 +221,24 @@
 <script>
 let addChannelIndex = 0;
 let addHeaderIndex = 1;
+
+function toggleAddType(v) {
+  var isTcp = v === 'tcp';
+  document.getElementById('addHttpUrlField').style.display = isTcp ? 'none' : '';
+  document.getElementById('addTcpFields').style.display = isTcp ? '' : 'none';
+  document.getElementById('addHttpFields').style.display = isTcp ? 'none' : '';
+  document.getElementById('addKeywordField').style.display = isTcp ? 'none' : '';
+  document.getElementById('addHeaderField').style.display = isTcp ? 'none' : '';
+  var urlInput = document.querySelector('#addTcpFields input[name="url"]');
+  var httpInput = document.querySelector('#addHttpUrlField input[name="url"]');
+  if (isTcp) {
+    httpInput.required = false;
+    urlInput.required = true;
+  } else {
+    urlInput.required = false;
+    httpInput.required = true;
+  }
+}
 
 function addHeaderRow() {
   const i = addHeaderIndex++;

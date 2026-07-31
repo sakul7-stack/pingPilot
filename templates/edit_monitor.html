@@ -22,14 +22,33 @@
           <input type="text" name="name" class="form-control" value="{{ monitor.name }}" required>
         </div>
         <div class="mb-3">
+          <label class="form-label">Check Type</label>
+          <select name="check_type" class="form-select" onchange="toggleEditType(this.value)">
+            <option value="http" {% if monitor.check_type == "http" or not monitor.check_type %}selected{% endif %}>HTTP(S)</option>
+            <option value="tcp" {% if monitor.check_type == "tcp" %}selected{% endif %}>TCP Port</option>
+          </select>
+        </div>
+        <div class="mb-3" id="editHttpUrlField">
           <label class="form-label">URL</label>
           <input type="url" name="url" class="form-control" value="{{ monitor.url }}" required>
+        </div>
+        <div class="mb-3" id="editTcpFields" style="display:none;">
+          <div class="row">
+            <div class="col-7">
+              <label class="form-label">Host</label>
+              <input type="text" name="url" class="form-control" value="{{ monitor.url }}">
+            </div>
+            <div class="col-5">
+              <label class="form-label">Port</label>
+              <input type="number" name="port" class="form-control" value="{{ monitor.port|default:"" }}" min="1" max="65535">
+            </div>
+          </div>
         </div>
         <div class="mb-3">
           <label class="form-label">Group <span class="text-muted">(optional)</span></label>
           <input type="text" name="group" class="form-control" value="{{ monitor.group }}" placeholder="e.g. Production">
         </div>
-        <div class="row">
+        <div class="row" id="editHttpFields">
           <div class="col-md-6 mb-3">
             <label class="form-label">Method</label>
             <select name="method" class="form-select">
@@ -42,11 +61,11 @@
             <input type="number" name="expected_status" class="form-control" value="{{ monitor.expected_status }}">
           </div>
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="editKeywordField">
           <label class="form-label">Expected Keyword <span class="text-muted">(optional)</span></label>
           <input type="text" name="expected_keyword" class="form-control" value="{{ monitor.expected_keyword|default:'' }}">
         </div>
-        <div class="mb-3">
+        <div class="mb-3" id="editHeaderField">
           <label class="form-label">Headers <span class="text-muted">(optional)</span></label>
           <div id="editHeadersContainer">
             {% for h in monitor.headers %}
@@ -181,6 +200,29 @@
 <script>
 let channelIndex = {{ monitor.channels.count|default:0 }};
 let editHeaderIndex = {{ monitor.headers|length }};
+
+function toggleEditType(v) {
+  var isTcp = v === 'tcp';
+  document.getElementById('editHttpUrlField').style.display = isTcp ? 'none' : '';
+  document.getElementById('editTcpFields').style.display = isTcp ? '' : 'none';
+  document.getElementById('editHttpFields').style.display = isTcp ? 'none' : '';
+  document.getElementById('editKeywordField').style.display = isTcp ? 'none' : '';
+  document.getElementById('editHeaderField').style.display = isTcp ? 'none' : '';
+  var tcpInput = document.querySelector('#editTcpFields input[name="url"]');
+  var httpInput = document.querySelector('#editHttpUrlField input[name="url"]');
+  if (isTcp) {
+    httpInput.required = false;
+    tcpInput.required = true;
+  } else {
+    tcpInput.required = false;
+    httpInput.required = true;
+  }
+}
+
+(function() {
+  var sel = document.querySelector('select[name="check_type"]');
+  if (sel) toggleEditType(sel.value);
+})();
 
 function addEditHeaderRow() {
   const i = editHeaderIndex++;

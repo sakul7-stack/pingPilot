@@ -122,6 +122,14 @@
     <div class="card-header">Configuration</div>
     <div class="card-body">
       <dl class="row mb-0">
+        {% if monitor.check_type == "tcp" %}
+        <dt class="col-sm-2">Host</dt>
+        <dd class="col-sm-10">
+          <code style="display:inline-block;max-width:90%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">{{ monitor.url }}</code>
+        </dd>
+        <dt class="col-sm-2">Port</dt>
+        <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.port }}</span></dd>
+        {% else %}
         <dt class="col-sm-2">URL</dt>
         <dd class="col-sm-10">
           <code style="display:inline-block;max-width:90%;overflow:hidden;text-overflow:ellipsis;vertical-align:middle;">{{ monitor.url }}</code>
@@ -140,6 +148,7 @@
             <code>{{ h.name }}</code>: <span style="color:var(--pp-muted);">{{ h.value }}</span>{% if not forloop.last %}<br>{% endif %}
           {% endfor %}
         </dd>
+        {% endif %}
         {% endif %}
         {% if monitor.group %}
         <dt class="col-sm-2">Group</dt>
