@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load pp_filters %}
 
 {% block content %}
 
@@ -38,6 +39,7 @@
             <th>Name</th>
             <th>URL</th>
             <th>Status</th>
+            {% for p in periods %}<th>{{ p }}d</th>{% endfor %}
             <th>Interval</th>
             <th>Last Checked</th>
             <th>Actions</th>
@@ -61,6 +63,21 @@
                 <span class="badge bg-light text-muted">Pending</span>
               {% endif %}
             </td>
+            {% for p in periods %}
+            <td>
+              {% with u=uptime_map|get_item:m.id|get_item:p|default_if_none:"-" %}
+                {% if u == "-" %}
+                  <span class="text-muted">&mdash;</span>
+                {% elif u == 100 %}
+                  <span style="color:var(--pp-signal);">{{ u|floatformat:2 }}%</span>
+                {% elif u >= 98 %}
+                  <span style="color:var(--pp-warning);">{{ u|floatformat:2 }}%</span>
+                {% else %}
+                  <span style="color:var(--pp-danger);">{{ u|floatformat:2 }}%</span>
+                {% endif %}
+              {% endwith %}
+            </td>
+            {% endfor %}
             <td>{{ m.check_interval_seconds }}s</td>
             <td>{{ m.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</td>
             <td>

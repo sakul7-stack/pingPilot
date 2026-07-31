@@ -10,6 +10,7 @@ from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.db.models import Count, Q
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -60,10 +61,31 @@ def dashboard(request):
     active_group = request.GET.get("group", "")
     if active_group:
         monitors = monitors.filter(group=active_group)
+
+    periods = [7, 30, 90]
+    monitor_ids = list(monitors.values_list("id", flat=True))
+    uptime_map = {mid: {p: None for p in periods} for mid in monitor_ids}
+    if monitor_ids:
+        now = timezone.now()
+        for p in periods:
+            cutoff = now - timedelta(days=p)
+            rows = (
+                Heartbeat.objects
+                .filter(monitor_id__in=monitor_ids, checked_at__gte=cutoff)
+                .values("monitor_id")
+                .annotate(total=Count("id"), ups=Count("id", filter=Q(status="UP")))
+            )
+            for r in rows:
+                mid = r["monitor_id"]
+                total = r["total"]
+                uptime_map[mid][p] = round(r["ups"] / total * 100, 2) if total else None
+
     return render(request, "dashboard.html", {
         "monitors": monitors,
         "groups": groups,
         "active_group": active_group,
+        "uptime_map": uptime_map,
+        "periods": periods,
     })
 
 
