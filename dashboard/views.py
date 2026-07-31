@@ -1,6 +1,7 @@
 import csv
 import json
 import hashlib
+import logging
 import secrets
 import ssl
 import socket
@@ -25,6 +26,8 @@ from allauth.socialaccount.models import SocialAccount
 from accounts.models import Profile, TelegramConnection
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, APIRequestLog, NotificationChannel, AlertLog
 from heartbeat.notifications import send_test_email, send_test_channel
+
+logger = logging.getLogger(__name__)
 
 
 def api_logged(view_func):
@@ -622,15 +625,26 @@ def api_monitor_stats(request, monitor_id):
 def send_test_notification(request, monitor_id):
     monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
     sent = []
+    failed = []
     if request.POST.get("email") == "1" and monitor.email_alerts:
-        send_test_email(monitor)
-        sent.append("Email")
+        try:
+            send_test_email(monitor)
+            sent.append("Email")
+        except Exception as e:
+            logger.error("Test email failed: %s", e)
+            failed.append({"channel": "Email", "error": str(e)})
     for cid in request.POST.getlist("channels"):
         ch = NotificationChannel.objects.filter(pk=cid, monitor=monitor).first()
-        if ch:
+        if not ch:
+            continue
+        name = ch.get_provider_display()
+        try:
             send_test_channel(monitor, ch)
-            sent.append(ch.get_provider_display())
-    return JsonResponse({"ok": True, "sent": sent})
+            sent.append(name)
+        except Exception as e:
+            logger.error("Test %s failed: %s", name, e)
+            failed.append({"channel": name, "error": str(e)})
+    return JsonResponse({"ok": True, "sent": sent, "failed": failed})
 
 
 @login_required

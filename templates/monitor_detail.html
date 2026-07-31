@@ -549,7 +549,11 @@ function sendTest() {
     btn.disabled = false;
     btn.textContent = 'Send test';
     if (res.status === 200 && res.data && res.data.ok) {
-      alert(res.data.sent.length ? 'Test sent to: ' + res.data.sent.join(', ') : 'No channels selected.');
+      var msg = '';
+      if (res.data.sent.length) msg += 'Sent to: ' + res.data.sent.join(', ');
+      if (res.data.failed.length) msg += (msg ? '\n' : '') + 'Failed: ' + res.data.failed.map(function(f){ return f.channel + ' (' + f.error + ')'; }).join(', ');
+      if (!msg) msg = 'No channels selected.';
+      alert(msg);
     } else {
       var detail = '';
       if (res.status === 403) detail = ' (HTTP 403 - CSRF check failed, please reload the page)';
