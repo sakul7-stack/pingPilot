@@ -11,6 +11,14 @@ from .models import Monitor
 TRANSIENT_ERRORS = {"TIMEOUT", "CONNECTION_RESET", "HTTP_502", "HTTP_503", "HTTP_504"}
 
 
+async def ttfb_hook(response):
+    response.extensions["ttfb_time"] = time.perf_counter()
+
+
+def create_check_client(timeout=10):
+    return httpx.AsyncClient(timeout=timeout, event_hooks={"response": [ttfb_hook]})
+
+
 def evaluate_response(resp: httpx.Response, monitor: Monitor) -> Status:
     if resp.status_code != monitor.expected_status:
         return Status.DOWN

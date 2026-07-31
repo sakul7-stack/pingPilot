@@ -12,6 +12,7 @@ urlpatterns = [
     path("<int:monitor_id>/export-incidents/", views.export_incidents_csv, name="export_incidents"),
     path("<int:monitor_id>/export-alerts/", views.export_alert_logs_csv, name="export_alerts"),
     path("<int:monitor_id>/test/", views.send_test_notification, name="send_test_notification"),
+    path("<int:monitor_id>/check/", views.check_now, name="check_now"),
     path("settings/", views.settings, name="settings"),
     path("telegram-connect/", views.telegram_connect, name="telegram_connect"),
     path("public/<str:token>/", views.public_monitor_detail, name="public_monitor_detail"),

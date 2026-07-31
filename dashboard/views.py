@@ -1,6 +1,7 @@
 import csv
 import json
 import hashlib
+import asyncio
 import logging
 import secrets
 import ssl
@@ -27,6 +28,10 @@ from allauth.socialaccount.models import SocialAccount
 from accounts.models import Profile, TelegramConnection
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, APIRequestLog, NotificationChannel, AlertLog
 from heartbeat.notifications import send_test_email, send_test_channel
+from heartbeat.checker import check_monitor, create_check_client
+from heartbeat.services import save_result
+from heartbeat.alerts import evaluate_and_alert
+from heartbeat.incidents import open_or_close_incident
 
 logger = logging.getLogger(__name__)
 
@@ -667,6 +672,32 @@ def send_test_notification(request, monitor_id):
             logger.error("Test %s failed: %s", name, e)
             failed.append({"channel": name, "error": str(e)})
     return JsonResponse({"ok": True, "sent": sent, "failed": failed})
+
+
+@login_required
+@require_POST
+def check_now(request, monitor_id):
+    monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
+
+    async def run_check():
+        async with create_check_client() as client:
+            return await check_monitor(monitor, client)
+
+    try:
+        result = asyncio.run(run_check())
+        save_result(monitor, result)
+        evaluate_and_alert(monitor, result)
+        open_or_close_incident(monitor, result)
+        detail = f"{result.status}"
+        if result.response_time_ms:
+            detail += f" ({result.response_time_ms:.0f}ms)"
+        if result.error:
+            detail += f" — {result.error}"
+        messages.success(request, f"Check complete: {detail}")
+    except Exception as e:
+        logger.error("Manual check for %s failed: %s", monitor.name, e)
+        messages.error(request, f"Check failed: {e}")
+    return redirect("monitor_detail", monitor_id=monitor.id)
 
 
 @login_required

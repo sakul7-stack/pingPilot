@@ -45,6 +45,10 @@
         {% if monitor.is_active %}Pause{% else %}Activate{% endif %}
       </a>
       <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#testModal">Test</button>
+      <form method="post" action="{% url 'check_now' monitor.id %}" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-sm btn-outline-primary" title="Run a check now">Check</button>
+      </form>
       <a href="{% url 'delete_monitor' monitor.id %}" class="btn btn-sm btn-outline-danger"
          onclick="return confirm('Delete {{ monitor.name }}?')">Delete</a>
       {% endif %}

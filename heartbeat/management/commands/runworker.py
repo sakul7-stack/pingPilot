@@ -1,22 +1,16 @@
 import asyncio
 import logging
-import time
 
-import httpx
 from asgiref.sync import sync_to_async
 from django.core.management.base import BaseCommand
 
 from heartbeat.alerts import evaluate_and_alert
-from heartbeat.checker import check_monitor
+from heartbeat.checker import check_monitor, create_check_client
 from heartbeat.incidents import open_or_close_incident
 from heartbeat.scheduler import get_due_monitors, next_sleep
 from heartbeat.services import save_result
 
 logger = logging.getLogger(__name__)
-
-
-async def ttfb_hook(response):
-    response.extensions["ttfb_time"] = time.perf_counter()
 
 
 class Command(BaseCommand):
@@ -33,7 +27,7 @@ class Command(BaseCommand):
         get_due = sync_to_async(get_due_monitors)
         sleep_dur = sync_to_async(next_sleep)
         semaphore = asyncio.Semaphore(100)
-        async with httpx.AsyncClient(timeout=10, event_hooks={"response": [ttfb_hook]}) as client:
+        async with create_check_client() as client:
             while True:
                 monitors = await get_due()
                 logger.info("Checking %d monitors...", len(monitors))
