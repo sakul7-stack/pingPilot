@@ -21,14 +21,17 @@ class CheckResult:
     response_time_ms:float|None
     body_size:int|None
     checked_at:datetime
+    meta:dict|None=None
 
     def to_dict(self)->dict:
-        return {
+        d = {
             "status":self.status,
             "status_code":self.status_code,
             "error":self.error,
             "response_time_ms":self.response_time_ms,
             "body_size":self.body_size,
             "checked_at":self.checked_at.isoformat(),
-
         }
+        if self.meta:
+            d["meta"]=self.meta
+        return d

@@ -280,6 +280,7 @@
             <th>Response Time</th>
             <th>Body Size</th>
             <th>Error</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -301,10 +302,30 @@
             <td>{{ hb.response_time_ms|floatformat:2|default:"—" }}ms</td>
             <td>{{ hb.body_size|default:"—" }}</td>
             <td>{{ hb.error|default:"—" }}</td>
+            <td class="text-center">
+              <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-1 hb-toggle" onclick="toggleMeta(this)" title="Details" style="line-height:1.4;">&#9660;</button>
+            </td>
+          </tr>
+          <tr class="hb-meta" style="display:none;">
+            <td colspan="7">
+              {% if hb.meta %}
+              <dl class="row mb-0 small">
+                {% if hb.meta.redirects is not None %}<dt class="col-3 text-muted">Redirects</dt><dd class="col-9">{{ hb.meta.redirects }}</dd>{% endif %}
+                {% if hb.meta.final_url %}<dt class="col-3 text-muted">Final URL</dt><dd class="col-9"><code>{{ hb.meta.final_url }}</code></dd>{% endif %}
+                {% if hb.meta.http_version %}<dt class="col-3 text-muted">HTTP Version</dt><dd class="col-9">{{ hb.meta.http_version }}</dd>{% endif %}
+                {% if hb.meta.server %}<dt class="col-3 text-muted">Server</dt><dd class="col-9">{{ hb.meta.server }}</dd>{% endif %}
+                {% if hb.meta.content_type %}<dt class="col-3 text-muted">Content-Type</dt><dd class="col-9">{{ hb.meta.content_type }}</dd>{% endif %}
+                {% if hb.meta.keyword_found is not None %}<dt class="col-3 text-muted">Keyword Found</dt><dd class="col-9">{{ hb.meta.keyword_found|yesno:"Yes,No" }}</dd>{% endif %}
+                {% if hb.meta.ttfb_ms is not None %}<dt class="col-3 text-muted">TTFB</dt><dd class="col-9">{{ hb.meta.ttfb_ms }}ms</dd>{% endif %}
+              </dl>
+              {% else %}
+              <span class="text-muted small">No meta data for this check.</span>
+              {% endif %}
+            </td>
           </tr>
           {% empty %}
           <tr>
-            <td colspan="6" class="text-center text-muted py-3">No checks yet. Wait for the worker to run.</td>
+            <td colspan="7" class="text-center text-muted py-3">No checks yet. Wait for the worker to run.</td>
           </tr>
           {% endfor %}
         </tbody>
@@ -464,6 +485,14 @@ var ctx = document.getElementById('responseChart').getContext('2d');
 </script>
 
 <script>
+function toggleMeta(btn) {
+  var metaRow = btn.closest('tr').nextElementSibling;
+  if (!metaRow || !metaRow.classList.contains('hb-meta')) return;
+  var hidden = metaRow.style.display === 'none';
+  metaRow.style.display = hidden ? '' : 'none';
+  btn.innerHTML = hidden ? '&#9650;' : '&#9660;';
+}
+
 function copyPublicLink() {
   var url = window.location.origin + '{% url "public_monitor_detail" monitor.share_token %}';
   navigator.clipboard.writeText(url).then(function() {

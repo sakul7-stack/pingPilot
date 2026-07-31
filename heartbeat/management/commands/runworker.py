@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 
 import httpx
 from asgiref.sync import sync_to_async
@@ -12,6 +13,10 @@ from heartbeat.scheduler import get_due_monitors, next_sleep
 from heartbeat.services import save_result
 
 logger = logging.getLogger(__name__)
+
+
+def ttfb_hook(response):
+    response.extensions["ttfb_time"] = time.perf_counter()
 
 
 class Command(BaseCommand):
@@ -28,7 +33,7 @@ class Command(BaseCommand):
         get_due = sync_to_async(get_due_monitors)
         sleep_dur = sync_to_async(next_sleep)
         semaphore = asyncio.Semaphore(100)
-        async with httpx.AsyncClient(timeout=10) as client:
+        async with httpx.AsyncClient(timeout=10, event_hooks={"response": [ttfb_hook]}) as client:
             while True:
                 monitors = await get_due()
                 logger.info("Checking %d monitors...", len(monitors))

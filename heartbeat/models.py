@@ -61,6 +61,7 @@ class HeartBeat(models.Model):
     response_time_ms=models.FloatField(null=True,blank=True)
     body_size=models.IntegerField(null=True,blank=True)
     checked_at=models.DateTimeField(auto_now_add=True)
+    meta=models.JSONField(default=dict, blank=True)
 
 
     class Meta:

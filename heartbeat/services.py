@@ -16,6 +16,7 @@ def save_result(monitor: Monitor, result: CheckResult) -> Heartbeat:
         error=result.error,
         response_time_ms=result.response_time_ms,
         body_size=result.body_size,
+        meta=result.meta or {},
     )
     if result.status == Status.DOWN:
         Monitor.objects.filter(pk=monitor.pk).update(
