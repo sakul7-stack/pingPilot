@@ -44,6 +44,7 @@
       <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
         {% if monitor.is_active %}Pause{% else %}Activate{% endif %}
       </a>
+      <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#testModal">Test</button>
       <a href="{% url 'delete_monitor' monitor.id %}" class="btn btn-sm btn-outline-danger"
          onclick="return confirm('Delete {{ monitor.name }}?')">Delete</a>
       {% endif %}
@@ -379,6 +380,38 @@
   </div>
 </div>
 
+<div class="modal fade" id="testModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content" style="background:#22222c;color:#E7ECF5;border:1px solid var(--pp-border);">
+      <div class="modal-header">
+        <h5 class="modal-title">Send test notification</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="small text-muted">Select where to send a test alert for <strong>{{ monitor.name }}</strong>.</p>
+        {% if monitor.email_alerts %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" id="testEmail" checked>
+          <label class="form-check-label" for="testEmail">Email ({{ monitor.user.email }})</label>
+        </div>
+        {% endif %}
+        {% for ch in channels %}
+        <div class="form-check">
+          <input class="form-check-input" type="checkbox" value="{{ ch.id }}" id="testCh{{ ch.id }}" checked>
+          <label class="form-check-label" for="testCh{{ ch.id }}">{{ ch.get_provider_display }}{% if ch.label %} ({{ ch.label }}){% endif %}</label>
+        </div>
+        {% empty %}
+        <p class="small text-muted mb-0">No notification channels configured for this monitor.</p>
+        {% endfor %}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-success" id="sendTestBtn" onclick="sendTest()">Send test</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script id="chartData" type="application/json">{{ chart_data|safe }}</script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script>
@@ -485,6 +518,46 @@ var ctx = document.getElementById('responseChart').getContext('2d');
 </script>
 
 <script>
+function csrftoken() {
+  var name = 'csrftoken';
+  var match = document.cookie.split(';').map(function(c){ return c.trim(); }).filter(function(c){ return c.indexOf(name + '=') === 0; });
+  return match.length ? decodeURIComponent(match[0].substring(name.length + 1)) : '';
+}
+
+function sendTest() {
+  var btn = document.getElementById('sendTestBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  var channels = [];
+  document.querySelectorAll('#testModal input[type="checkbox"]:checked').forEach(function(cb) {
+    if (cb.id === 'testEmail') return;
+    channels.push(cb.value);
+  });
+  var email = document.getElementById('testEmail') && document.getElementById('testEmail').checked ? '1' : '0';
+  var body = new URLSearchParams({ email: email });
+  channels.forEach(function(c) { body.append('channels', c); });
+  fetch('{% url "send_test_notification" monitor.id %}', {
+    method: 'POST',
+    headers: {
+      'X-CSRFToken': csrftoken(),
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: body.toString()
+  }).then(function(r) { return r.json(); }).then(function(data) {
+    btn.disabled = false;
+    btn.textContent = 'Send test';
+    if (data.ok) {
+      alert(data.sent.length ? 'Test sent to: ' + data.sent.join(', ') : 'No channels selected.');
+    } else {
+      alert('Failed to send test.');
+    }
+  }).catch(function() {
+    btn.disabled = false;
+    btn.textContent = 'Send test';
+    alert('Failed to send test.');
+  });
+}
+
 function toggleMeta(btn) {
   var metaRow = btn.closest('tr').nextElementSibling;
   if (!metaRow || !metaRow.classList.contains('hb-meta')) return;

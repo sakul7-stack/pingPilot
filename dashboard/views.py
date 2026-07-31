@@ -24,6 +24,7 @@ from allauth.socialaccount.models import SocialAccount
 
 from accounts.models import Profile, TelegramConnection
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, APIRequestLog, NotificationChannel, AlertLog
+from heartbeat.notifications import send_test_email, send_test_channel
 
 
 def api_logged(view_func):
@@ -614,6 +615,22 @@ def api_monitor_stats(request, monitor_id):
         "current_status": monitor.last_status,
         "is_active": monitor.is_active,
     })
+
+
+@login_required
+@require_POST
+def send_test_notification(request, monitor_id):
+    monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
+    sent = []
+    if request.POST.get("email") == "1" and monitor.email_alerts:
+        send_test_email(monitor)
+        sent.append("Email")
+    for cid in request.POST.getlist("channels"):
+        ch = NotificationChannel.objects.filter(pk=cid, monitor=monitor).first()
+        if ch:
+            send_test_channel(monitor, ch)
+            sent.append(ch.get_provider_display())
+    return JsonResponse({"ok": True, "sent": sent})
 
 
 @login_required

@@ -4,6 +4,20 @@ import httpx
 logger=logging.getLogger(__name__)
 
 
+def _alert_parts(payload: dict) -> tuple:
+    event = payload.get("event", "up")
+    m = payload["monitor"]
+    if event == "down":
+        return (
+            "\U0001f6a8",
+            "DOWN",
+            f"Status: {payload['result']['status_code']}\nTime: {payload['result']['checked_at']}",
+        )
+    if event == "test":
+        return ("\U0001f9ea", "TEST", "Test notification from PingPilot")
+    return ("\u2705", "UP", f"Recovered: {payload['recovered_at']}")
+
+
 def send_webhook(config:dict,payload:dict)->None:
     url=config.get("url")
     if not url:
@@ -23,20 +37,8 @@ def send_telegram(config:dict,payload:dict)->None:
         return
 
     m= payload["monitor"]
-
-    if payload["event"]=="down":
-        text=(
-            f"\U0001f6a8 <b>DOWN:</b> {m['name']}\n"
-            f"URL: {m['url']}\n"
-            f"Status: {payload['result']['status_code']}\n"
-            f"Time: {payload['result']['checked_at']}"
-        )
-    else:
-        text = (
-            f"\u2705 <b>UP:</b> {m['name']}\n"
-            f"URL: {m['url']}\n"
-            f"Recovered: {payload['recovered_at']}"
-        )
+    icon, word, extra = _alert_parts(payload)
+    text = f"{icon} <b>{word}:</b> {m['name']}\nURL: {m['url']}\n{extra}"
 
     try:
         httpx.post(
@@ -53,11 +55,15 @@ def send_discord(config: dict, payload: dict) -> None:
     if not url:
         return
     is_down = payload["event"] == "down"
+    icon, word, extra = _alert_parts(payload)
     embed = {
         "embeds": [{
-            "title": f"{'\U0001f6a8 DOWN' if is_down else '\u2705 UP'}: {payload['monitor']['name']}",
+            "title": f"{icon} {word}: {payload['monitor']['name']}",
             "color": 0xFF4444 if is_down else 0x44FF44,
-            "fields": [{"name": "URL", "value": payload["monitor"]["url"]}],
+            "fields": [
+                {"name": "URL", "value": payload["monitor"]["url"]},
+                {"name": "Details", "value": extra},
+            ],
         }]
     }
     try:
@@ -72,11 +78,8 @@ def send_slack(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    text = (
-        f"{'\U0001f6a8' if is_down else '\u2705'} *{'DOWN' if is_down else 'UP'}: {m['name']}*\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) + '\nTime: ' + payload['result']['checked_at'] if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    text = f"{icon} *{word}: {m['name']}*\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
     except Exception as e:
@@ -91,11 +94,9 @@ def send_pushover(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    title = f"{'\U0001f6a8 DOWN' if is_down else '\u2705 UP'}: {m['name']}"
-    message = (
-        f"{m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) + '\nTime: ' + payload['result']['checked_at'] if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    title = f"{icon} {word}: {m['name']}"
+    message = f"{m['url']}\n{extra}"
     try:
         httpx.post(
             "https://api.pushover.net/1/messages.json",
@@ -112,11 +113,9 @@ def send_teams(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    title = f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}"
-    text = (
-        f"{m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    title = f"{icon} {word}: {m['name']}"
+    text = f"{m['url']}\n{extra}"
     card = {
         "@type": "MessageCard",
         "@context": "https://schema.org/extensions",
@@ -137,11 +136,8 @@ def send_googlechat(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    text = (
-        f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    text = f"{icon} {word}: {m['name']}\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
     except Exception as e:
@@ -154,11 +150,8 @@ def send_mattermost(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    text = (
-        f"{'\U0001f6a8' if is_down else '\u2705'} **{'DOWN' if is_down else 'UP'}: {m['name']}**\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    text = f"{icon} **{word}: {m['name']}**\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
     except Exception as e:
@@ -171,11 +164,8 @@ def send_zulip(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    content = (
-        f"**{'DOWN' if is_down else 'UP'}**: {m['name']}\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    content = f"**{word}**: {m['name']}\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"topic": "PingPilot", "content": content}, timeout=15).raise_for_status()
     except Exception as e:
@@ -186,13 +176,15 @@ def send_pagerduty(config: dict, payload: dict) -> None:
     routing_key = config.get("routing_key")
     if not routing_key:
         return
-    is_down = payload["event"] == "down"
+    event = payload["event"]
+    is_down = event == "down"
     m = payload["monitor"]
+    icon, word, extra = _alert_parts(payload)
     body = {
         "routing_key": routing_key,
-        "event_action": "trigger" if is_down else "resolve",
+        "event_action": "trigger" if (is_down or event == "test") else "resolve",
         "payload": {
-            "summary": f"{'DOWN' if is_down else 'UP'}: {m['name']}",
+            "summary": f"{word}: {m['name']}",
             "severity": "critical" if is_down else "info",
             "source": m["url"],
             "custom_details": {"status_code": payload.get("result", {}).get("status_code")} if is_down else {},
@@ -209,13 +201,9 @@ def send_pagerduty(config: dict, payload: dict) -> None:
 
 
 def _send_webhook_post(url: str, payload: dict, provider_name: str) -> None:
-    is_down = payload["event"] == "down"
     m = payload["monitor"]
-    text = (
-        f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    text = f"{icon} {word}: {m['name']}\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"text": text}, timeout=15).raise_for_status()
     except Exception as e:
@@ -256,11 +244,8 @@ def send_chime(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
-    content = (
-        f"{'\U0001f6a8' if is_down else '\u2705'} {'DOWN' if is_down else 'UP'}: {m['name']}\n"
-        f"URL: {m['url']}\n"
-        f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-    )
+    icon, word, extra = _alert_parts(payload)
+    content = f"{icon} {word}: {m['name']}\nURL: {m['url']}\n{extra}"
     try:
         httpx.post(url, json={"Content": content}, timeout=15).raise_for_status()
     except Exception as e:
@@ -273,8 +258,9 @@ def send_opsgenie(config: dict, payload: dict) -> None:
         return
     is_down = payload["event"] == "down"
     m = payload["monitor"]
+    icon, word, extra = _alert_parts(payload)
     body = {
-        "message": f"{'DOWN' if is_down else 'UP'}: {m['name']}",
+        "message": f"{word}: {m['name']}",
         "alias": f"pingpilot-{m['id']}",
         "details": {
             "url": m["url"],
@@ -298,16 +284,14 @@ def send_splunk(config: dict, payload: dict) -> None:
     routing_key = config.get("routing_key")
     if not routing_key:
         return
-    is_down = payload["event"] == "down"
+    event = payload["event"]
+    is_down = event == "down"
     m = payload["monitor"]
+    icon, word, extra = _alert_parts(payload)
     body = {
-        "message_type": "CRITICAL" if is_down else "RECOVERY",
+        "message_type": "CRITICAL" if is_down else ("INFO" if event == "test" else "RECOVERY"),
         "entity_id": f"pingpilot-{m['id']}",
-        "state_message": (
-            f"{'DOWN' if is_down else 'UP'}: {m['name']}\n"
-            f"URL: {m['url']}\n"
-            f"{'Status: ' + str(payload['result']['status_code']) if is_down else 'Recovered: ' + payload['recovered_at']}"
-        ),
+        "state_message": f"{word}: {m['name']}\nURL: {m['url']}\n{extra}",
         "entity_display_name": m["name"],
         "monitoring_tool": "PingPilot",
     }
@@ -322,6 +306,8 @@ def send_splunk(config: dict, payload: dict) -> None:
 
 
 def send_github(config: dict, payload: dict, channel=None) -> None:
+    if payload.get("event") == "test":
+        return
     owner = config.get("owner", "")
     repo = config.get("repo", "")
     token = config.get("token", "")
