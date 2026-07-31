@@ -152,8 +152,25 @@ LOGGING = {
             "class": "logging.StreamHandler",
         },
     },
+    "root": {
+        "handlers": ["console"],
+        "level": "WARNING",
+    },
     "loggers": {
+        "django.request": {
+            "handlers": ["console"],
+            "level": "WARNING",
+            "propagate": False,
+        },
         "accounts": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "heartbeat": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "dashboard": {
             "handlers": ["console"],
             "level": "INFO",
         },
