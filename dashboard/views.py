@@ -188,6 +188,11 @@ def monitor_detail(request, monitor_id):
     all_hb = list(heartbeats_qs.order_by("checked_at").values("status", "checked_at"))
     now = timezone.now()
     start = now - timedelta(days=days)
+    next_check_in = (
+        max(0, int((monitor.next_check_at - now).total_seconds()))
+        if monitor.is_active and monitor.next_check_at
+        else None
+    )
     total_secs = (now - start).total_seconds()
     seg_secs = total_secs / 30
     aggregated_bar = []
@@ -251,6 +256,7 @@ def monitor_detail(request, monitor_id):
         "ssl_info": ssl_info,
         "channels": channels,
         "alert_logs": alert_logs,
+        "next_check_in": next_check_in,
     })
 
 

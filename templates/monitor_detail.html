@@ -39,6 +39,8 @@
       {% if is_public %}
         <span class="badge bg-info" style="font-size:.85rem;padding:.4rem .8rem;">Shared View</span>
       {% else %}
+      <span id="autoRefreshBadge" class="badge" style="font-size:.85rem;padding:.4rem .8rem;cursor:pointer;" title="Toggle auto-refresh"
+            onclick="toggleAutoRefresh()"></span>
       <button class="btn btn-sm btn-primary" onclick="copyPublicLink()">Get public link</button>
       <a href="{% url 'edit_monitor' monitor.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
       <a href="{% url 'toggle_monitor' monitor.id %}" class="btn btn-sm btn-outline-info">
@@ -137,6 +139,14 @@
         <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.timeout }}s</span></dd>
         <dt class="col-sm-2">Consecutive Failures</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-danger);">{{ monitor.consecutive_failures }}</span></dd>
+        <dt class="col-sm-2">Next Check</dt>
+        <dd class="col-sm-10">
+          {% if next_check_in is None %}
+            <span style="color:var(--pp-muted);">Paused</span>
+          {% else %}
+            <span id="nextCheckCountdown" data-seconds="{{ next_check_in }}" style="color:#ffb347;">{{ next_check_in }}s</span>
+          {% endif %}
+        </dd>
         <dt class="col-sm-2">Last Checked</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
         {% if not is_public %}
@@ -456,5 +466,49 @@ function copyPublicLink() {
     }, 2000);
   });
 }
+
+{% if not is_public and monitor.is_active %}
+var REFRESH_SECONDS = 20;
+var autoRefreshOn = true;
+var countdownEl = document.getElementById('nextCheckCountdown');
+var refreshBadge = document.getElementById('autoRefreshBadge');
+
+function fmt(secs) {
+  secs = Math.max(0, Math.floor(secs));
+  var h = Math.floor(secs / 3600);
+  var m = Math.floor((secs % 3600) / 60);
+  var s = secs % 60;
+  if (h > 0) return h + 'h ' + m + 'm';
+  if (m > 0) return m + 'm ' + s + 's';
+  return s + 's';
+}
+
+function updateBadge() {
+  refreshBadge.textContent = autoRefreshOn ? 'Auto-refresh: ' + REFRESH_SECONDS + 's' : 'Auto-refresh: off';
+  refreshBadge.className = 'badge ' + (autoRefreshOn ? 'bg-success' : 'bg-secondary');
+}
+updateBadge();
+
+function tickCountdown() {
+  if (!countdownEl) return;
+  var secs = parseInt(countdownEl.getAttribute('data-seconds'), 10);
+  if (isNaN(secs)) return;
+  secs = Math.max(0, secs - 1);
+  countdownEl.setAttribute('data-seconds', secs);
+  countdownEl.textContent = fmt(secs);
+}
+setInterval(tickCountdown, 1000);
+
+setInterval(function() {
+  if (autoRefreshOn && document.visibilityState === 'visible') {
+    window.location.reload();
+  }
+}, REFRESH_SECONDS * 1000);
+
+function toggleAutoRefresh() {
+  autoRefreshOn = !autoRefreshOn;
+  updateBadge();
+}
+{% endif %}
 </script>
 {% endblock %}
