@@ -321,6 +321,57 @@ def send_splunk(config: dict, payload: dict) -> None:
         logger.error("Splunk On-Call failed: %s", e)
 
 
+def send_github(config: dict, payload: dict, channel=None) -> None:
+    owner = config.get("owner", "")
+    repo = config.get("repo", "")
+    token = config.get("token", "")
+    if not owner or not repo or not token:
+        return
+    is_down = payload["event"] == "down"
+    m = payload["monitor"]
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github+json",
+    }
+    api = f"https://api.github.com/repos/{owner}/{repo}"
+    try:
+        if is_down:
+            body = (
+                f"**DOWN**: {m['name']}\n"
+                f"URL: {m['url']}\n"
+                f"Status: {payload['result']['status_code']}\n"
+                f"Time: {payload['result']['checked_at']}"
+            )
+            resp = httpx.post(
+                f"{api}/issues",
+                headers=headers,
+                json={"title": f"DOWN: {m['name']}", "body": body},
+                timeout=15,
+            )
+            resp.raise_for_status()
+            issue_number = resp.json().get("number")
+            if channel and issue_number:
+                config["issue_number"] = issue_number
+                channel.config = config
+                channel.save(update_fields=["config"])
+        else:
+            issue_number = config.get("issue_number")
+            if not issue_number:
+                return
+            httpx.patch(
+                f"{api}/issues/{issue_number}",
+                headers=headers,
+                json={"state": "closed"},
+                timeout=15,
+            ).raise_for_status()
+            if channel:
+                config.pop("issue_number", None)
+                channel.config = config
+                channel.save(update_fields=["config"])
+    except Exception as e:
+        logger.error("GitHub failed: %s", e)
+
+
 def send_matrix(config: dict, payload: dict) -> None:
     _send_webhook_post(config.get("webhook_url", ""), payload, "Matrix")
 
@@ -357,10 +408,15 @@ DISPATCHERS = {
     "xmatters": send_xmatters,
     "opsgenie": send_opsgenie,
     "splunk": send_splunk,
+    "github": send_github,
 }
 
 
-def dispatch(provider: str, config: dict, payload: dict) -> None:
+def dispatch(provider: str, config: dict, payload: dict, channel=None) -> None:
     fn = DISPATCHERS.get(provider)
-    if fn:
+    if not fn:
+        return
+    if provider == "github":
+        fn(config, payload, channel)
+    else:
         fn(config, payload)

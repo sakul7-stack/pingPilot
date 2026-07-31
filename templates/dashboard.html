@@ -227,6 +227,7 @@ function addAddChannel() {
             <option value="xmatters">xMatters</option>
             <option value="opsgenie">Opsgenie</option>
             <option value="splunk">Splunk On-Call</option>
+            <option value="github">GitHub</option>
           </select>
         </div>
         <div class="col-3">
@@ -272,6 +273,8 @@ function updateAddChannelFields(select) {
     fields.innerHTML = `<input type="url" name="ch_${i}_webhook_url" class="form-control form-control-sm" placeholder="Webhook URL">`;
   } else if (v === 'opsgenie') {
     fields.innerHTML = `<input type="text" name="ch_${i}_api_key" class="form-control form-control-sm" placeholder="API Key">`;
+  } else if (v === 'github') {
+    fields.innerHTML = `<div class="d-flex gap-1"><input type="text" name="ch_${i}_owner" class="form-control form-control-sm" placeholder="Owner"><input type="text" name="ch_${i}_repo" class="form-control form-control-sm" placeholder="Repo"><input type="password" name="ch_${i}_token" class="form-control form-control-sm" placeholder="PAT"></div>`;
   } else if (v === 'splunk') {
     fields.innerHTML = `<input type="text" name="ch_${i}_routing_key" class="form-control form-control-sm" placeholder="Routing Key">`;
   }

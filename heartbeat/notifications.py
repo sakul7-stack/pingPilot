@@ -21,7 +21,7 @@ def send_down_alert(monitor: Monitor, result: CheckResult) -> None:
         _send_email(monitor, "down", payload)
         AlertLog.objects.create(monitor=monitor, event="down", channel="email")
     for ch in monitor.channels.all():
-        dispatch(ch.provider, ch.config, payload)
+        dispatch(ch.provider, ch.config, payload, ch)
         AlertLog.objects.create(monitor=monitor, event="down", channel=ch.provider)
 
 
@@ -35,7 +35,7 @@ def send_up_alert(monitor: Monitor) -> None:
         _send_email(monitor, "up", payload)
         AlertLog.objects.create(monitor=monitor, event="up", channel="email")
     for ch in monitor.channels.all():
-        dispatch(ch.provider, ch.config, payload)
+        dispatch(ch.provider, ch.config, payload, ch)
         AlertLog.objects.create(monitor=monitor, event="up", channel=ch.provider)
 
 

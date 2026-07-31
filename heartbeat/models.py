@@ -118,6 +118,7 @@ class NotificationChannel(models.Model):
         ("xmatters","xMatters"),
         ("opsgenie","Opsgenie"),
         ("splunk","Splunk On-Call"),
+        ("github","GitHub"),
     ]
 
     monitor=models.ForeignKey(

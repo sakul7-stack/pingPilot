@@ -690,6 +690,19 @@ def _save_channels(monitor, data, user=None):
             config = {"api_key": data.get(f"ch_{i}_api_key", "").strip()}
         elif provider == "splunk":
             config = {"routing_key": data.get(f"ch_{i}_routing_key", "").strip()}
+        elif provider == "github":
+            issue_number = None
+            if channel_id:
+                existing = NotificationChannel.objects.filter(pk=channel_id, monitor=monitor).first()
+                if existing:
+                    issue_number = existing.config.get("issue_number")
+            config = {
+                "owner": data.get(f"ch_{i}_owner", "").strip(),
+                "repo": data.get(f"ch_{i}_repo", "").strip(),
+                "token": data.get(f"ch_{i}_token", "").strip(),
+            }
+            if issue_number:
+                config["issue_number"] = issue_number
         else:
             i += 1
             continue
