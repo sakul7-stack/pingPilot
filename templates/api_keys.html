@@ -72,6 +72,50 @@
   </div>
 
   <div class="card mt-4">
+    <div class="card-header">API Request Logs</div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+      <table class="table table-sm mb-0">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Key</th>
+            <th>Method</th>
+            <th>Endpoint</th>
+            <th>Status</th>
+            <th>IP</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in request_logs %}
+            <tr>
+              <td class="text-nowrap">{{ log.created_at|date:"Y-m-d H:i:s" }} UTC</td>
+              <td>{{ log.key.name }} <code class="text-muted">({{ log.key.prefix }}...)</code></td>
+              <td><span style="color:#5fc9ff;">{{ log.method }}</span></td>
+              <td><code>{{ log.endpoint }}</code></td>
+              <td>
+                {% if log.status_code >= 200 and log.status_code < 300 %}
+                  <span class="badge bg-success">{{ log.status_code }}</span>
+                {% elif log.status_code >= 400 %}
+                  <span class="badge bg-danger">{{ log.status_code }}</span>
+                {% else %}
+                  <span class="badge bg-warning text-dark">{{ log.status_code }}</span>
+                {% endif %}
+              </td>
+              <td><span class="text-muted">{{ log.ip|default:"—" }}</span></td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="text-center text-muted py-3">No API requests yet. Call an endpoint with your key to see logs.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="card mt-4">
     <div class="card-header">API Documentation</div>
     <div class="card-body">
       <p>Authenticate by passing your API key via the <code>X-API-Key</code> header.</p>

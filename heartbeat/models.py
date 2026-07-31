@@ -81,6 +81,19 @@ class APIKey(models.Model):
         indexes = [models.Index(fields=["key_hash"])]
 
 
+class APIRequestLog(models.Model):
+    key = models.ForeignKey(APIKey, on_delete=models.CASCADE, related_name="request_logs")
+    endpoint = models.CharField(max_length=200)
+    method = models.CharField(max_length=10)
+    status_code = models.IntegerField()
+    ip = models.GenericIPAddressField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        indexes = [models.Index(fields=["key", "-created_at"])]
+
+
 class Incident(models.Model):
     monitor=models.ForeignKey(
         Monitor,on_delete=models.CASCADE,related_name="indidents"

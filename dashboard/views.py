@@ -4,6 +4,7 @@ import hashlib
 import secrets
 import ssl
 import socket
+from functools import wraps
 from urllib.parse import urlparse
 
 from django.contrib.auth.decorators import login_required
@@ -22,7 +23,24 @@ from django.contrib.auth.models import User
 from allauth.socialaccount.models import SocialAccount
 
 from accounts.models import Profile, TelegramConnection
-from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, NotificationChannel, AlertLog
+from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, APIRequestLog, NotificationChannel, AlertLog
+
+
+def api_logged(view_func):
+    @wraps(view_func)
+    def wrapper(request, *args, **kwargs):
+        response = view_func(request, *args, **kwargs)
+        key = getattr(request, "_api_key", None)
+        if key:
+            APIRequestLog.objects.create(
+                key=key,
+                endpoint=request.path,
+                method=request.method,
+                status_code=response.status_code,
+                ip=request.META.get("REMOTE_ADDR", "") or None,
+            )
+        return response
+    return wrapper
 
 
 @login_required
@@ -462,6 +480,7 @@ def settings(request):
 
 @login_required
 def api_keys(request):
+    logs = APIRequestLog.objects.filter(key__user=request.user)[:50]
     if request.method == "POST":
         name = request.POST.get("name", "").strip() or "Unnamed"
         raw = secrets.token_hex(32)
@@ -472,11 +491,13 @@ def api_keys(request):
         )
         return render(request, "api_keys.html", {
             "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
+            "request_logs": logs,
             "new_key": f"pp_{raw}",
             "site_url": django_settings.SITE_URL,
         })
     return render(request, "api_keys.html", {
         "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
+        "request_logs": logs,
         "site_url": django_settings.SITE_URL,
     })
 
@@ -507,11 +528,13 @@ def api_auth(request):
         key = APIKey.objects.get(key_hash=key_hash, is_active=True)
         key.last_used_at = timezone.now()
         key.save(update_fields=["last_used_at"])
+        request._api_key = key
         return key.user
     except APIKey.DoesNotExist:
         return None
 
 
+@api_logged
 def api_monitors(request):
     user = api_auth(request)
     if not user:
@@ -524,6 +547,7 @@ def api_monitors(request):
     return JsonResponse(list(monitors), safe=False)
 
 
+@api_logged
 def api_monitor_detail(request, monitor_id):
     user = api_auth(request)
     if not user:
@@ -545,6 +569,7 @@ def api_monitor_detail(request, monitor_id):
     })
 
 
+@api_logged
 def api_monitor_heartbeats(request, monitor_id):
     user = api_auth(request)
     if not user:
@@ -561,6 +586,7 @@ def api_monitor_heartbeats(request, monitor_id):
     return JsonResponse(list(heartbeats), safe=False)
 
 
+@api_logged
 def api_monitor_incidents(request, monitor_id):
     user = api_auth(request)
     if not user:
@@ -572,6 +598,7 @@ def api_monitor_incidents(request, monitor_id):
     return JsonResponse(list(incidents), safe=False)
 
 
+@api_logged
 def api_monitor_stats(request, monitor_id):
     user = api_auth(request)
     if not user:
