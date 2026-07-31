@@ -28,7 +28,21 @@ from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor, APIKey, 
 @login_required
 def dashboard(request):
     monitors = Monitor.objects.filter(user=request.user).order_by("-created_at")
-    return render(request, "dashboard.html", {"monitors": monitors})
+    groups = list(
+        Monitor.objects.filter(user=request.user)
+        .exclude(group="")
+        .values_list("group", flat=True)
+        .distinct()
+        .order_by("group")
+    )
+    active_group = request.GET.get("group", "")
+    if active_group:
+        monitors = monitors.filter(group=active_group)
+    return render(request, "dashboard.html", {
+        "monitors": monitors,
+        "groups": groups,
+        "active_group": active_group,
+    })
 
 
 @login_required
@@ -41,6 +55,7 @@ def create_monitor(request):
         check_interval = request.POST.get("check_interval_seconds", 600)
         timeout = request.POST.get("timeout", 10)
         expected_keyword = request.POST.get("expected_keyword", "").strip()
+        group = request.POST.get("group", "").strip()
 
         if not name or not url:
             messages.error(request, "Name and URL are required.")
@@ -59,6 +74,7 @@ def create_monitor(request):
             check_interval_seconds=int(check_interval),
             timeout=int(timeout),
             expected_keyword=expected_keyword,
+            group=group,
             email_alerts=request.POST.get("email_alerts") == "on",
         )
         _save_channels(monitor, request.POST, user=request.user)
@@ -95,6 +111,7 @@ def edit_monitor(request, monitor_id):
         check_interval = request.POST.get("check_interval_seconds", 600)
         timeout = request.POST.get("timeout", 10)
         expected_keyword = request.POST.get("expected_keyword", "").strip()
+        group = request.POST.get("group", "").strip()
 
         if name and url:
             monitor.name = name
@@ -104,6 +121,7 @@ def edit_monitor(request, monitor_id):
             monitor.check_interval_seconds = int(check_interval)
             monitor.timeout = int(timeout)
             monitor.expected_keyword = expected_keyword
+            monitor.group = group
             monitor.email_alerts = request.POST.get("email_alerts") == "on"
             monitor.save()
             _save_channels(monitor, request.POST, user=request.user)
@@ -376,6 +394,24 @@ def export_incidents_csv(request, monitor_id):
 
 
 @login_required
+def export_alert_logs_csv(request, monitor_id):
+    monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
+    qs = AlertLog.objects.filter(monitor=monitor).order_by("-sent_at")
+
+    response = HttpResponse(content_type="text/csv")
+    response["Content-Disposition"] = f'attachment; filename="{monitor.name}_alerts.csv"'
+    writer = csv.writer(response)
+    writer.writerow(["Time (UTC)", "Event", "Channel"])
+    for log in qs:
+        writer.writerow([
+            log.sent_at.strftime("%Y-%m-%d %H:%M:%S"),
+            "UP" if log.event == "up" else "DOWN",
+            log.channel or "",
+        ])
+    return response
+
+
+@login_required
 def settings(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
     social_accounts = SocialAccount.objects.filter(user=request.user)
@@ -399,6 +435,9 @@ def settings(request):
         tz = request.POST.get("timezone", "").strip()
         if tz:
             profile.timezone = tz
+
+        profile.weekly_report = request.POST.get("weekly_report") == "on"
+        profile.monthly_report = request.POST.get("monthly_report") == "on"
 
         profile.save()
         messages.success(request, "Settings saved.")

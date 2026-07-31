@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body{ margin:0; padding:0; background-color:#0B1220; font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif; }
+    .container{ max-width:560px; margin:40px auto; background:#101A2E; border-radius:16px; overflow:hidden; border:1px solid #1E2A44; }
+    .header{ padding:36px 40px 24px; text-align:center; }
+    .header .icon{ width:56px; height:56px; border-radius:50%; margin:0 auto 12px; display:flex; align-items:center; justify-content:center; background:rgba(47,212,143,0.16); font-size:28px; }
+    .header h1{ margin:0; color:#E7ECF5; font-size:22px; font-weight:600; font-family:'Space Grotesk',sans-serif; }
+    .body{ padding:0 40px 32px; }
+    .body p{ color:#9a99a0; font-size:15px; line-height:1.7; margin:0 0 12px; }
+    .stat-row{ display:flex; gap:12px; margin:20px 0; }
+    .stat{ flex:1; background:rgba(255,255,255,0.03); border:1px solid #1E2A44; border-radius:12px; padding:16px; text-align:center; }
+    .stat .val{ color:#E7ECF5; font-size:24px; font-weight:600; font-family:'Space Grotesk',sans-serif; }
+    .stat .lbl{ color:#5a5960; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+    table{ width:100%; border-collapse:collapse; margin:12px 0; }
+    th{ color:#5a5960; font-size:11px; text-transform:uppercase; letter-spacing:1px; text-align:left; padding:8px 10px; border-bottom:1px solid #1E2A44; }
+    td{ color:#9a99a0; font-size:14px; padding:8px 10px; border-bottom:1px solid rgba(30,42,68,0.5); }
+    td .up{ color:#1DB86D; font-weight:600; }
+    .cta{ text-align:center; margin:24px 0; }
+    .cta a{ display:inline-block; background:#1DB86D; color:#0B1220; text-decoration:none; padding:12px 36px; border-radius:10px; font-size:15px; font-weight:600; }
+    .divider{ height:1px; background:#1E2A44; margin:0 40px; }
+    .footer{ padding:24px 40px; text-align:center; }
+    .footer p{ color:#5a5960; font-size:12px; margin:4px 0; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="icon">📊</div>
+      <h1>PingPilot {{ period_display }} Report</h1>
+    </div>
+    <div class="body">
+      <p>Here's how your monitors performed over the last period.</p>
+      <div class="stat-row">
+        <div class="stat"><div class="val">{{ avg_uptime|default:"—" }}%</div><div class="lbl">Avg Uptime</div></div>
+        <div class="stat"><div class="val">{{ total_incidents }}</div><div class="lbl">Incidents</div></div>
+        <div class="stat"><div class="val">{{ monitors|length }}</div><div class="lbl">Monitors</div></div>
+      </div>
+      <table>
+        <thead>
+          <tr><th>Monitor</th><th>Uptime</th><th>Checks</th><th>Incidents</th></tr>
+        </thead>
+        <tbody>
+          {% for m in monitors %}
+          <tr>
+            <td style="color:#E7ECF5;">{{ m.name }}</td>
+            <td class="up">{{ m.uptime|default:"—" }}%</td>
+            <td>{{ m.checks }}</td>
+            <td>{{ m.incidents }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="cta">
+        <a href="{{ dashboard_url }}">View Dashboard</a>
+      </div>
+    </div>
+    <div class="divider"></div>
+    <div class="footer">
+      <p>&copy; 2026 PingPilot. All rights reserved.</p>
+      <p>Monitoring Made Simple</p>
+    </div>
+  </div>
+</body>
+</html>

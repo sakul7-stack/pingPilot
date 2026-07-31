@@ -127,6 +127,10 @@
         <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_status }}</span></dd>
         <dt class="col-sm-2">Expected Keyword</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_keyword|default:"—" }}</span></dd>
+        {% if monitor.group %}
+        <dt class="col-sm-2">Group</dt>
+        <dd class="col-sm-10"><span style="color:#5fc9ff;">{{ monitor.group }}</span></dd>
+        {% endif %}
         <dt class="col-sm-2">Interval</dt>
         <dd class="col-sm-10"><span style="color:#ffb347;">{{ monitor.check_interval_seconds }}s</span></dd>
         <dt class="col-sm-2">Timeout</dt>
@@ -199,7 +203,12 @@
 
   {% if not is_public and alert_logs %}
   <div class="card mb-4">
-    <div class="card-header">Alert History</div>
+    <div class="card-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+      <span>Alert History</span>
+      {% if not is_public %}
+      <a href="{% url 'export_alerts' monitor.id %}" class="btn btn-sm btn-outline-secondary">Export CSV</a>
+      {% endif %}
+    </div>
     <div class="card-body p-0">
       <table class="table table-sm mb-0">
         <thead>

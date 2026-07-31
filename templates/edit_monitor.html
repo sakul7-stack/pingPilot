@@ -25,6 +25,10 @@
           <label class="form-label">URL</label>
           <input type="url" name="url" class="form-control" value="{{ monitor.url }}" required>
         </div>
+        <div class="mb-3">
+          <label class="form-label">Group <span class="text-muted">(optional)</span></label>
+          <input type="text" name="group" class="form-control" value="{{ monitor.group }}" placeholder="e.g. Production">
+        </div>
         <div class="row">
           <div class="col-md-6 mb-3">
             <label class="form-label">Method</label>

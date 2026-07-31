@@ -12,6 +12,15 @@
     </div>
   </div>
 
+  {% if groups %}
+  <div class="mb-3 d-flex gap-2 flex-wrap align-items-center">
+    <a href="{% url 'dashboard' %}" class="btn btn-sm {% if not active_group %}btn-primary{% else %}btn-outline-secondary{% endif %}">All</a>
+    {% for g in groups %}
+    <a href="{% url 'dashboard' %}?group={{ g|urlencode }}" class="btn btn-sm {% if active_group == g %}btn-primary{% else %}btn-outline-secondary{% endif %}">{{ g }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% if messages %}
     {% for message in messages %}
       <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
@@ -110,6 +119,13 @@
         <div class="mb-3">
           <label class="form-label">Expected Keyword <span class="text-muted">(optional)</span></label>
           <input type="text" name="expected_keyword" class="form-control" placeholder="e.g. Welcome">
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Group <span class="text-muted">(optional)</span></label>
+          <input type="text" name="group" class="form-control" placeholder="e.g. Production" list="groupList">
+          <datalist id="groupList">
+            {% for g in groups %}<option value="{{ g }}">{% endfor %}
+          </datalist>
         </div>
         <div class="mb-3">
           <label class="form-label">Interval: <span id="intervalVal">600</span>s (3 min – 24h)</label>

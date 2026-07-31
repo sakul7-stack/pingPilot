@@ -38,6 +38,8 @@ class Monitor(models.Model):
 
     email_alerts=models.BooleanField(default=True)
     share_token = models.CharField(max_length=64, unique=True, null=True, blank=True)
+    group=models.CharField(max_length=50, blank=True, default="")
+    ssl_alert_sent_at=models.DateTimeField(null=True, blank=True)
 
     class Meta:
         indexes=[
