@@ -15,7 +15,7 @@ from heartbeat.services import save_result
 logger = logging.getLogger(__name__)
 
 
-def ttfb_hook(response):
+async def ttfb_hook(response):
     response.extensions["ttfb_time"] = time.perf_counter()
 
 
