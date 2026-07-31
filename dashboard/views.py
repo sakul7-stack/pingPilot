@@ -470,6 +470,31 @@ def export_alert_logs_csv(request, monitor_id):
     return response
 
 
+_MAIN_TZ_REGIONS = {
+    "Africa", "America", "Antarctica", "Arctic", "Asia", "Atlantic",
+    "Australia", "Europe", "Indian", "Pacific",
+}
+_timezone_groups_cache = None
+
+
+def _timezone_groups():
+    global _timezone_groups_cache
+    if _timezone_groups_cache is None:
+        from zoneinfo import available_timezones
+        groups = {}
+        for tz in available_timezones():
+            if "/" not in tz:
+                continue
+            region, _ = tz.split("/", 1)
+            if region not in _MAIN_TZ_REGIONS:
+                continue
+            groups.setdefault(region, []).append(tz)
+        for region in groups:
+            groups[region].sort()
+        _timezone_groups_cache = dict(sorted(groups.items()))
+    return _timezone_groups_cache
+
+
 @login_required
 def settings(request):
     profile, _ = Profile.objects.get_or_create(user=request.user)
@@ -506,6 +531,7 @@ def settings(request):
     return render(request, "settings.html", {
         "profile": profile,
         "social_accounts": social_accounts,
+        "timezone_groups": _timezone_groups(),
     })
 
 

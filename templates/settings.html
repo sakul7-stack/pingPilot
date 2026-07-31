@@ -72,22 +72,15 @@
     <div class="card mb-3 border-white">
       <div class="card-header">Timezone</div>
       <div class="card-body">
-        <select name="timezone" class="form-control">
+        <select name="timezone" class="form-select">
           <option value="UTC" {% if profile.timezone == "UTC" %}selected{% endif %}>UTC</option>
-          <option value="US/Eastern" {% if profile.timezone == "US/Eastern" %}selected{% endif %}>US/Eastern</option>
-          <option value="US/Central" {% if profile.timezone == "US/Central" %}selected{% endif %}>US/Central</option>
-          <option value="US/Mountain" {% if profile.timezone == "US/Mountain" %}selected{% endif %}>US/Mountain</option>
-          <option value="US/Pacific" {% if profile.timezone == "US/Pacific" %}selected{% endif %}>US/Pacific</option>
-          <option value="Europe/London" {% if profile.timezone == "Europe/London" %}selected{% endif %}>Europe/London</option>
-          <option value="Europe/Berlin" {% if profile.timezone == "Europe/Berlin" %}selected{% endif %}>Europe/Berlin</option>
-          <option value="Europe/Paris" {% if profile.timezone == "Europe/Paris" %}selected{% endif %}>Europe/Paris</option>
-          <option value="Asia/Kolkata" {% if profile.timezone == "Asia/Kolkata" %}selected{% endif %}>Asia/Kolkata</option>
-          <option value="Asia/Kathmandu" {% if profile.timezone == "Asia/Kathmandu" %}selected{% endif %}>Asia/Kathmandu</option>
-          <option value="Asia/Tokyo" {% if profile.timezone == "Asia/Tokyo" %}selected{% endif %}>Asia/Tokyo</option>
-          <option value="Asia/Shanghai" {% if profile.timezone == "Asia/Shanghai" %}selected{% endif %}>Asia/Shanghai</option>
-          <option value="Asia/Dubai" {% if profile.timezone == "Asia/Dubai" %}selected{% endif %}>Asia/Dubai</option>
-          <option value="Australia/Sydney" {% if profile.timezone == "Australia/Sydney" %}selected{% endif %}>Australia/Sydney</option>
-          <option value="Pacific/Auckland" {% if profile.timezone == "Pacific/Auckland" %}selected{% endif %}>Pacific/Auckland</option>
+          {% for region, zones in timezone_groups.items %}
+            <optgroup label="{{ region }}">
+              {% for tz in zones %}
+                <option value="{{ tz }}" {% if profile.timezone == tz %}selected{% endif %}>{{ tz }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endfor %}
         </select>
       </div>
     </div>
