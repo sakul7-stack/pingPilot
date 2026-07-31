@@ -388,6 +388,7 @@
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
+        <form id="testForm">{% csrf_token %}</form>
         <p class="small text-muted">Select where to send a test alert for <strong>{{ monitor.name }}</strong>.</p>
         {% if monitor.email_alerts %}
         <div class="form-check">
@@ -518,12 +519,6 @@ var ctx = document.getElementById('responseChart').getContext('2d');
 </script>
 
 <script>
-function csrftoken() {
-  var name = 'csrftoken';
-  var match = document.cookie.split(';').map(function(c){ return c.trim(); }).filter(function(c){ return c.indexOf(name + '=') === 0; });
-  return match.length ? decodeURIComponent(match[0].substring(name.length + 1)) : '';
-}
-
 function sendTest() {
   var btn = document.getElementById('sendTestBtn');
   btn.disabled = true;
@@ -536,25 +531,37 @@ function sendTest() {
   var email = document.getElementById('testEmail') && document.getElementById('testEmail').checked ? '1' : '0';
   var body = new URLSearchParams({ email: email });
   channels.forEach(function(c) { body.append('channels', c); });
+  var csrfInput = document.querySelector('#testForm input[name="csrfmiddlewaretoken"]');
   fetch('{% url "send_test_notification" monitor.id %}', {
     method: 'POST',
     headers: {
-      'X-CSRFToken': csrftoken(),
+      'X-CSRFToken': csrfInput ? csrfInput.value : '',
       'Content-Type': 'application/x-www-form-urlencoded'
     },
     body: body.toString()
-  }).then(function(r) { return r.json(); }).then(function(data) {
+  }).then(function(r) {
+    return r.json().then(function(data) {
+      return { status: r.status, data: data };
+    }).catch(function() {
+      return { status: r.status, data: null };
+    });
+  }).then(function(res) {
     btn.disabled = false;
     btn.textContent = 'Send test';
-    if (data.ok) {
-      alert(data.sent.length ? 'Test sent to: ' + data.sent.join(', ') : 'No channels selected.');
+    if (res.status === 200 && res.data && res.data.ok) {
+      alert(res.data.sent.length ? 'Test sent to: ' + res.data.sent.join(', ') : 'No channels selected.');
     } else {
-      alert('Failed to send test.');
+      var detail = '';
+      if (res.status === 403) detail = ' (HTTP 403 - CSRF check failed, please reload the page)';
+      else if (res.status === 404) detail = ' (HTTP 404 - endpoint not deployed)';
+      else if (res.status === 500) detail = ' (HTTP 500 - server error)';
+      else if (res.status !== 200) detail = ' (HTTP ' + res.status + ')';
+      alert('Failed to send test.' + detail);
     }
   }).catch(function() {
     btn.disabled = false;
     btn.textContent = 'Send test';
-    alert('Failed to send test.');
+    alert('Failed to send test. (network error)');
   });
 }
 

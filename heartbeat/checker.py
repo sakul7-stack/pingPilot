@@ -1,4 +1,5 @@
 import asyncio
+import ssl
 import time
 from datetime import datetime
 
@@ -71,10 +72,10 @@ async def check_monitor(
         )
     except httpx.TimeoutException:
         return await retry_if_transient("TIMEOUT", monitor, client, started)
-    except httpx.ConnectError:
+    except httpx.ConnectError as exc:
+        if isinstance(exc.__cause__, ssl.SSLError):
+            return _check_result(Status.DOWN, error="SSL_ERROR")
         return _check_result(Status.DOWN, error="DNS_ERROR")
-    except httpx.SSLError:
-        return _check_result(Status.DOWN, error="SSL_ERROR")
 
 
 async def retry_if_transient(
