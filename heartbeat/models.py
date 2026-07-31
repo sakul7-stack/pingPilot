@@ -138,7 +138,7 @@ class NotificationChannel(models.Model):
     monitor=models.ForeignKey(
         Monitor,on_delete=models.CASCADE,related_name="channels"
     )
-    provider=models.CharField(max_length=50,blank=True)
+    provider=models.CharField(max_length=50,blank=True,choices=PROVIDERS)
     label=models.CharField(max_length=50,blank=True)
     config=models.JSONField(default=dict)
 
