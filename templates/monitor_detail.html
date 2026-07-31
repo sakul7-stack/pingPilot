@@ -127,6 +127,14 @@
         <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_status }}</span></dd>
         <dt class="col-sm-2">Expected Keyword</dt>
         <dd class="col-sm-10"><span style="color:var(--pp-signal);">{{ monitor.expected_keyword|default:"—" }}</span></dd>
+        {% if monitor.headers %}
+        <dt class="col-sm-2">Headers</dt>
+        <dd class="col-sm-10">
+          {% for h in monitor.headers %}
+            <code>{{ h.name }}</code>: <span style="color:var(--pp-muted);">{{ h.value }}</span>{% if not forloop.last %}<br>{% endif %}
+          {% endfor %}
+        </dd>
+        {% endif %}
         {% if monitor.group %}
         <dt class="col-sm-2">Group</dt>
         <dd class="col-sm-10"><span style="color:#5fc9ff;">{{ monitor.group }}</span></dd>

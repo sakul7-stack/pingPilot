@@ -34,9 +34,10 @@ async def check_monitor(
 ) -> CheckResult:
     started = datetime.now()
     method = monitor.method.lower()
+    headers = {h["name"]: h["value"] for h in monitor.headers if h.get("name") and h.get("value")}
     try:
         resp = await client.request(
-            method, monitor.url, timeout=monitor.timeout
+            method, monitor.url, timeout=monitor.timeout, headers=headers
         )
         elapsed = (datetime.now() - started).total_seconds() * 1000
         status = evaluate_response(resp, monitor)
@@ -66,9 +67,10 @@ async def retry_if_transient(
         return _check_result(Status.DOWN, error=error)
     await asyncio.sleep(2)
     method = monitor.method.lower()
+    headers = {h["name"]: h["value"] for h in monitor.headers if h.get("name") and h.get("value")}
     try:
         resp = await client.request(
-            method, monitor.url, timeout=monitor.timeout
+            method, monitor.url, timeout=monitor.timeout, headers=headers
         )
         elapsed = (datetime.now() - started).total_seconds() * 1000
         status = evaluate_response(resp, monitor)

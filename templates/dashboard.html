@@ -128,6 +128,23 @@
           </datalist>
         </div>
         <div class="mb-3">
+          <label class="form-label">Headers <span class="text-muted">(optional)</span></label>
+          <div id="addHeadersContainer">
+            <div class="row g-1 mb-1" data-header-row>
+              <div class="col-6">
+                <input type="text" name="header_0_name" class="form-control form-control-sm" placeholder="Header name">
+              </div>
+              <div class="col-5">
+                <input type="text" name="header_0_value" class="form-control form-control-sm" placeholder="Value">
+              </div>
+              <div class="col-1 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('[data-header-row]').remove()">&times;</button>
+              </div>
+            </div>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addHeaderRow()">+ Add header</button>
+        </div>
+        <div class="mb-3">
           <label class="form-label">Interval: <span id="intervalVal">600</span>s (3 min – 24h)</label>
           <input type="range" name="check_interval_seconds" class="form-range" value="600" min="180" max="86400" step="60"
                  oninput="document.getElementById('intervalVal').textContent=this.value">
@@ -161,6 +178,24 @@
 {% block extra_js %}
 <script>
 let addChannelIndex = 0;
+let addHeaderIndex = 1;
+
+function addHeaderRow() {
+  const i = addHeaderIndex++;
+  const html = `
+    <div class="row g-1 mb-1" data-header-row>
+      <div class="col-6">
+        <input type="text" name="header_${i}_name" class="form-control form-control-sm" placeholder="Header name">
+      </div>
+      <div class="col-5">
+        <input type="text" name="header_${i}_value" class="form-control form-control-sm" placeholder="Value">
+      </div>
+      <div class="col-1 text-end">
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('[data-header-row]').remove()">&times;</button>
+      </div>
+    </div>`;
+  document.getElementById('addHeadersContainer').insertAdjacentHTML('beforeend', html);
+}
 
 function addAddChannel() {
   const i = addChannelIndex++;

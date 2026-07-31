@@ -47,6 +47,25 @@
           <input type="text" name="expected_keyword" class="form-control" value="{{ monitor.expected_keyword|default:'' }}">
         </div>
         <div class="mb-3">
+          <label class="form-label">Headers <span class="text-muted">(optional)</span></label>
+          <div id="editHeadersContainer">
+            {% for h in monitor.headers %}
+            <div class="row g-1 mb-1" data-header-row>
+              <div class="col-6">
+                <input type="text" name="header_{{ forloop.counter0 }}_name" class="form-control form-control-sm" placeholder="Header name" value="{{ h.name }}">
+              </div>
+              <div class="col-5">
+                <input type="text" name="header_{{ forloop.counter0 }}_value" class="form-control form-control-sm" placeholder="Value" value="{{ h.value }}">
+              </div>
+              <div class="col-1 text-end">
+                <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('[data-header-row]').remove()">&times;</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addEditHeaderRow()">+ Add header</button>
+        </div>
+        <div class="mb-3">
           <label class="form-label">Interval: <span id="intervalVal">{{ monitor.check_interval_seconds }}</span>s</label>
           <input type="range" name="check_interval_seconds" class="form-range" value="{{ monitor.check_interval_seconds }}" min="180" max="86400" step="60" oninput="document.getElementById('intervalVal').textContent=this.value">
         </div>
@@ -154,6 +173,24 @@
 
 <script>
 let channelIndex = {{ monitor.channels.count|default:0 }};
+let editHeaderIndex = {{ monitor.headers|length }};
+
+function addEditHeaderRow() {
+  const i = editHeaderIndex++;
+  const html = `
+    <div class="row g-1 mb-1" data-header-row>
+      <div class="col-6">
+        <input type="text" name="header_${i}_name" class="form-control form-control-sm" placeholder="Header name">
+      </div>
+      <div class="col-5">
+        <input type="text" name="header_${i}_value" class="form-control form-control-sm" placeholder="Value">
+      </div>
+      <div class="col-1 text-end">
+        <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('[data-header-row]').remove()">&times;</button>
+      </div>
+    </div>`;
+  document.getElementById('editHeadersContainer').insertAdjacentHTML('beforeend', html);
+}
 
 function addChannel() {
   const i = channelIndex++;

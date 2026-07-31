@@ -76,6 +76,7 @@ def create_monitor(request):
             expected_keyword=expected_keyword,
             group=group,
             email_alerts=request.POST.get("email_alerts") == "on",
+            headers=_parse_headers(request.POST),
         )
         _save_channels(monitor, request.POST, user=request.user)
         messages.success(request, f"Monitor '{name}' created.")
@@ -123,6 +124,7 @@ def edit_monitor(request, monitor_id):
             monitor.expected_keyword = expected_keyword
             monitor.group = group
             monitor.email_alerts = request.POST.get("email_alerts") == "on"
+            monitor.headers = _parse_headers(request.POST)
             monitor.save()
             _save_channels(monitor, request.POST, user=request.user)
             messages.success(request, f"Monitor '{name}' updated.")
@@ -712,3 +714,15 @@ def _save_channels(monitor, data, user=None):
         i += 1
 
     monitor.channels.exclude(pk__in=kept_ids).delete()
+
+
+def _parse_headers(data):
+    headers = []
+    i = 0
+    while f"header_{i}_name" in data:
+        name = data.get(f"header_{i}_name", "").strip()
+        value = data.get(f"header_{i}_value", "").strip()
+        if name and value:
+            headers.append({"name": name, "value": value})
+        i += 1
+    return headers
