@@ -511,7 +511,35 @@ def settings(request):
 
 @login_required
 def api_keys(request):
+    key_qs = APIKey.objects.filter(user=request.user).order_by("-created_at")
     logs = APIRequestLog.objects.filter(key__user=request.user)[:50]
+    key_rows = (
+        APIRequestLog.objects.filter(key__user=request.user)
+        .values("key_id")
+        .annotate(
+            total=Count("id"),
+            ok=Count("id", filter=Q(status_code__lt=400)),
+            err=Count("id", filter=Q(status_code__gte=400)),
+        )
+    )
+    key_stats = {r["key_id"]: r for r in key_rows}
+    endpoint_stats = (
+        APIRequestLog.objects.filter(key__user=request.user)
+        .values("endpoint")
+        .annotate(
+            total=Count("id"),
+            ok=Count("id", filter=Q(status_code__lt=400)),
+            err=Count("id", filter=Q(status_code__gte=400)),
+        )
+        .order_by("-total")[:20]
+    )
+    ctx = {
+        "keys": key_qs,
+        "request_logs": logs,
+        "key_stats": key_stats,
+        "endpoint_stats": endpoint_stats,
+        "site_url": django_settings.SITE_URL,
+    }
     if request.method == "POST":
         name = request.POST.get("name", "").strip() or "Unnamed"
         raw = secrets.token_hex(32)
@@ -520,17 +548,8 @@ def api_keys(request):
         APIKey.objects.create(
             user=request.user, name=name, prefix=prefix, key_hash=key_hash
         )
-        return render(request, "api_keys.html", {
-            "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
-            "request_logs": logs,
-            "new_key": f"pp_{raw}",
-            "site_url": django_settings.SITE_URL,
-        })
-    return render(request, "api_keys.html", {
-        "keys": APIKey.objects.filter(user=request.user).order_by("-created_at"),
-        "request_logs": logs,
-        "site_url": django_settings.SITE_URL,
-    })
+        ctx["new_key"] = f"pp_{raw}"
+    return render(request, "api_keys.html", ctx)
 
 
 @login_required
