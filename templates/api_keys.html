@@ -51,8 +51,8 @@
             <tr>
               <td>{{ key.name }}</td>
               <td><code>{{ key.prefix }}...</code></td>
-              <td>{{ key.created_at|date:"Y-m-d H:i:s" }} UTC</td>
-              <td>{{ key.last_used_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</td>
+              <td>{{ key.created_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</td>
+              <td>{% if key.last_used_at %}{{ key.last_used_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}{% else %}Never{% endif %}</td>
               <td>
                 {% with ks=key_stats|get_item:key.id %}
                   {% if ks and ks.total %}
@@ -138,7 +138,7 @@
         <tbody>
           {% for log in request_logs %}
             <tr>
-              <td class="text-nowrap">{{ log.created_at|date:"Y-m-d H:i:s" }} UTC</td>
+              <td class="text-nowrap">{{ log.created_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</td>
               <td>{{ log.key.name }} <code class="text-muted">({{ log.key.prefix }}...)</code></td>
               <td><span style="color:#5fc9ff;">{{ log.method }}</span></td>
               <td><code>{{ log.endpoint }}</code></td>

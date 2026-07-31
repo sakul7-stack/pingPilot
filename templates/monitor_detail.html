@@ -160,12 +160,12 @@
           {% endif %}
         </dd>
         <dt class="col-sm-2">Last Checked</dt>
-        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</span></dd>
+        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{% if monitor.last_checked_at %}{{ monitor.last_checked_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}{% else %}Never{% endif %}</span></dd>
         {% if not is_public %}
         <dt class="col-sm-2">Created</dt>
-        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.created_at|date:"Y-m-d H:i:s" }} UTC</span></dd>
+        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.created_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</span></dd>
         <dt class="col-sm-2">Last Edited</dt>
-        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.updated_at|date:"Y-m-d H:i:s" }} UTC</span></dd>
+        <dd class="col-sm-10"><span style="color:var(--pp-muted);">{{ monitor.updated_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</span></dd>
         {% endif %}
         {% if not is_public %}
         <dt class="col-sm-2">Channels</dt>
@@ -211,8 +211,8 @@
         <tbody>
           {% for inc in incidents %}
           <tr>
-            <td>{{ inc.opened_at|date:"Y-m-d H:i:s" }} UTC</td>
-            <td>{{ inc.closed_at|date:"Y-m-d H:i:s"|default:"Open" }} UTC</td>
+            <td>{{ inc.opened_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</td>
+            <td>{{ inc.closed_at|date:"Y-m-d H:i:s"|default:"Open" }} {{ active_timezone }}</td>
             <td>
               {% if inc.duration_display %}
                 {{ inc.duration_display }}
@@ -249,7 +249,7 @@
         <tbody>
           {% for log in alert_logs %}
           <tr>
-            <td>{{ log.sent_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td>{{ log.sent_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</td>
             <td>
               {% if log.event == "down" %}
                 <span class="badge bg-danger">DOWN</span>
@@ -292,7 +292,7 @@
         <tbody>
           {% for hb in heartbeats %}
           <tr>
-            <td class="text-nowrap">{{ hb.checked_at|date:"Y-m-d H:i:s" }} UTC</td>
+            <td class="text-nowrap">{{ hb.checked_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}</td>
             <td>
               {% if hb.status == "UP" %}
                 <span class="badge bg-success">UP</span>

@@ -237,7 +237,7 @@ def monitor_detail(request, monitor_id):
     uptime_label = {1: "Last 24h", 7: "Last 7 days", 30: "Last 30 days", 90: "Last 90 days"}.get(days, f"Last {days} days")
 
     all_hb = list(heartbeats_qs.order_by("checked_at").values("status", "checked_at"))
-    now = timezone.now()
+    now = timezone.localtime()
     start = now - timedelta(days=days)
     next_check_in = (
         max(0, int((monitor.next_check_at - now).total_seconds()))
@@ -265,7 +265,7 @@ def monitor_detail(request, monitor_id):
         "checked_at", "response_time_ms", "status"
     ))
     def serialize_hb(hb):
-        dt = hb["checked_at"]
+        dt = timezone.localtime(hb["checked_at"])
         return {
             "t": dt.strftime("%H:%M"),
             "r": hb["response_time_ms"],
@@ -340,7 +340,7 @@ def public_monitor_detail(request, token):
     uptime_label = {1: "Last 24h", 7: "Last 7 days", 30: "Last 30 days", 90: "Last 90 days"}.get(days, f"Last {days} days")
 
     all_hb = list(heartbeats_qs.order_by("checked_at").values("status", "checked_at"))
-    now = timezone.now()
+    now = timezone.localtime()
     start = now - timedelta(days=days)
     total_secs = (now - start).total_seconds()
     seg_secs = total_secs / 30
@@ -363,7 +363,7 @@ def public_monitor_detail(request, token):
         "checked_at", "response_time_ms", "status"
     ))
     def serialize_hb(hb):
-        dt = hb["checked_at"]
+        dt = timezone.localtime(hb["checked_at"])
         return {
             "t": dt.strftime("%H:%M"),
             "r": hb["response_time_ms"],

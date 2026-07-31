@@ -79,7 +79,7 @@
             </td>
             {% endfor %}
             <td>{{ m.check_interval_seconds }}s</td>
-            <td>{{ m.last_checked_at|date:"Y-m-d H:i:s"|default:"Never" }} UTC</td>
+            <td>{% if m.last_checked_at %}{{ m.last_checked_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}{% else %}Never{% endif %}</td>
             <td>
               <a href="{% url 'edit_monitor' m.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
               <a href="{% url 'toggle_monitor' m.id %}" class="btn btn-sm btn-outline-info">
