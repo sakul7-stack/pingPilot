@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="{{ page.theme }}">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,240 +9,437 @@
 
   <style>
     :root {
-      --header-color: {{ page.header_color }};
-      --accent-color: {{ page.accent_color }};
-      --bg-color: {% if page.theme == 'dark' %}#0f0f23{% elif page.theme == 'minimal' %}#ffffff{% else %}#f5f7fa{% endif %};
-      --card-bg: {% if page.theme == 'dark' %}#1a1a2e{% elif page.theme == 'minimal' %}#ffffff{% else %}#ffffff{% endif %};
-      --text-color: {% if page.theme == 'dark' %}#e0e0e0{% else %}#333333{% endif %};
-      --heading-color: {% if page.theme == 'dark' %}#ffffff{% else %}#1a1a2e{% endif %};
-      --border-color: {% if page.theme == 'dark' %}#2a2a4a{% else %}#e0e0e0{% endif %};
+      --accent: {{ page.accent_color }};
+      --header: {{ page.header_color }};
+      --up: #22c55e;
+      --down: #ef4444;
+      --degraded: #f59e0b;
+      --muted: #6b7280;
+      --radius: 14px;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
     }
+
+    {% if page.theme == 'dark' %}
+    :root {
+      --bg: #0b0f17;
+      --bg-soft: #111827;
+      --card: #151c2b;
+      --card-hover: #1a2333;
+      --border: #242e42;
+      --text: #e5e9f0;
+      --text-soft: #8b94a7;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.25);
+    }
+    {% elif page.theme == 'minimal' %}
+    :root {
+      --bg: #ffffff;
+      --bg-soft: #fafafa;
+      --card: #ffffff;
+      --card-hover: #ffffff;
+      --border: #e6e6e6;
+      --text: #18181b;
+      --text-soft: #71717a;
+      --shadow: 0 1px 2px rgba(0,0,0,.04);
+    }
+    {% elif page.theme == 'corporate' %}
+    :root {
+      --bg: #f7f8fa;
+      --bg-soft: #eef0f4;
+      --card: #ffffff;
+      --card-hover: #ffffff;
+      --border: #dde1e8;
+      --text: #1c2333;
+      --text-soft: #5b6472;
+      --shadow: 0 1px 3px rgba(20,30,50,.08);
+    }
+    {% else %}
+    :root {
+      --bg: #f6f7fb;
+      --bg-soft: #eef0f6;
+      --card: #ffffff;
+      --card-hover: #ffffff;
+      --border: #e3e6ef;
+      --text: #1a2130;
+      --text-soft: #667085;
+      --shadow: 0 1px 2px rgba(20,30,50,.05), 0 8px 24px rgba(20,30,50,.05);
+    }
+    {% endif %}
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: {% if page.theme == 'corporate' %}'Georgia', 'Times New Roman', serif{% else %}-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif{% endif %};
-      background: var(--bg-color);
-      color: var(--text-color);
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
       line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .container { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
 
-    .status-header {
-      background: var(--header-color);
+    /* ---------- Header ---------- */
+    .header {
+      background: linear-gradient(160deg, var(--header) 0%, color-mix(in srgb, var(--header) 78%, #000) 100%);
       color: #fff;
-      padding: 48px 0 36px;
+      padding: 44px 0 40px;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    .status-header .logo { max-width: 90px; max-height: 90px; margin-bottom: 16px; border-radius: 8px; }
-    .status-header h1 { font-size: 32px; margin-bottom: 8px; }
-    .status-header .description { opacity: 0.85; margin-bottom: 18px; font-size: 15px; }
-    .overall-uptime { display: flex; justify-content: center; }
-    .uptime-badge {
-      display: inline-block;
-      padding: 8px 18px;
+    .header::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(600px 160px at 50% -60px, rgba(255,255,255,.14), transparent 70%);
+      pointer-events: none;
+    }
+    .header .logo { max-height: 64px; max-width: 120px; margin-bottom: 18px; border-radius: 12px; box-shadow: var(--shadow); }
+    .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.02em; }
+    .header .desc { margin-top: 8px; font-size: 15px; opacity: .85; }
+
+    .overall-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      padding: 9px 18px;
       border-radius: 999px;
-      font-weight: 600;
+      background: rgba(0,0,0,.28);
+      backdrop-filter: blur(6px);
       font-size: 14px;
+      font-weight: 600;
     }
-    .uptime-badge.all-good { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
-    .uptime-badge.good { background: rgba(245, 166, 35, 0.15); color: #f5a623; border: 1px solid #f5a623; }
-    .uptime-badge.issues { background: rgba(255, 92, 108, 0.15); color: #ff5c6c; border: 1px solid #ff5c6c; }
+    .overall-status .dot {
+      width: 9px; height: 9px; border-radius: 50%;
+      background: var(--up);
+      box-shadow: 0 0 0 4px rgba(34,197,94,.25);
+    }
+    .overall-status.warn .dot { background: var(--degraded); box-shadow: 0 0 0 4px rgba(245,158,11,.25); }
+    .overall-status.down .dot { background: var(--down); box-shadow: 0 0 0 4px rgba(239,68,68,.25); }
 
-    main { padding: 32px 0 48px; }
+    /* ---------- Main ---------- */
+    main { padding: 28px 0 48px; }
 
-    .incidents-banner { margin-bottom: 28px; }
-    .incident {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-left: 4px solid var(--accent-color);
-      border-radius: 10px;
-      padding: 16px 20px;
+    .section-label {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin: 26px 2px 14px;
+    }
+    .section-label h2 { font-size: 16px; font-weight: 700; letter-spacing: -0.01em; }
+    .section-label span { font-size: 12px; color: var(--text-soft); }
+
+    /* ---------- Incidents banner ---------- */
+    .incident-post {
+      display: flex;
+      gap: 14px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--degraded);
+      border-radius: var(--radius);
+      padding: 16px 18px;
       margin-bottom: 12px;
+      box-shadow: var(--shadow);
     }
-    .incident.maintenance { border-left-color: #f5a623; }
-    .incident.investigating { border-left-color: #ff5c6c; }
-    .incident.identified { border-left-color: #e67e22; }
-    .incident.monitoring { border-left-color: #3498db; }
-    .incident.resolved { border-left-color: #2ecc71; }
-    .incident .badge {
-      display: inline-block;
+    .incident-post .sev {
+      flex-shrink: 0;
+      align-self: flex-start;
       font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      padding: 3px 8px;
-      border-radius: 4px;
-      background: rgba(0,0,0,0.08);
-      margin-right: 8px;
-      vertical-align: middle;
-    }
-    .incident p { margin-top: 6px; font-size: 14px; opacity: 0.85; }
-
-    .monitor-card {
-      background: var(--card-bg);
-      border: 1px solid var(--border-color);
-      border-radius: 12px;
-      padding: 20px 22px;
-      margin-bottom: 14px;
-    }
-    .monitor-card.down { border-left: 4px solid #ff5c6c; }
-    .monitor-card.degraded { border-left: 4px solid #f5a623; }
-    .monitor-card.up { border-left: 4px solid #2ecc71; }
-
-    .monitor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
-    .monitor-header h3 { flex: 1; font-size: 17px; color: var(--heading-color); }
-    .status-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-    .status-indicator.up { background: #2ecc71; }
-    .status-indicator.down { background: #ff5c6c; }
-    .status-indicator.degraded { background: #f5a623; }
-    .status-indicator.pending { background: #95a5a6; }
-    .status-label {
-      font-size: 12px;
       font-weight: 700;
-      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      letter-spacing: .04em;
       padding: 3px 10px;
       border-radius: 999px;
     }
-    .status-label.up { background: rgba(46,204,113,0.15); color: #2ecc71; }
-    .status-label.down { background: rgba(255,92,108,0.15); color: #ff5c6c; }
-    .status-label.degraded { background: rgba(245,166,35,0.15); color: #f5a623; }
-    .status-label.pending { background: rgba(149,165,166,0.15); color: #95a5a6; }
+    .incident-post.maintenance { border-left-color: var(--degraded); }
+    .incident-post.maintenance .sev { background: rgba(245,158,11,.14); color: var(--degraded); }
+    .incident-post.investigating { border-left-color: var(--down); }
+    .incident-post.investigating .sev { background: rgba(239,68,68,.14); color: var(--down); }
+    .incident-post.identified { border-left-color: #f97316; }
+    .incident-post.identified .sev { background: rgba(249,115,22,.14); color: #f97316; }
+    .incident-post.monitoring { border-left-color: #3b82f6; }
+    .incident-post.monitoring .sev { background: rgba(59,130,246,.14); color: #3b82f6; }
+    .incident-post.resolved { border-left-color: var(--up); }
+    .incident-post.resolved .sev { background: rgba(34,197,94,.14); color: var(--up); }
+    .incident-post strong { display: block; font-size: 15px; }
+    .incident-post p { margin-top: 4px; font-size: 13.5px; color: var(--text-soft); }
+    .incident-post time { display: block; margin-top: 6px; font-size: 12px; color: var(--text-soft); opacity: .8; }
 
-    .monitor-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 14px; }
-    .stat { text-align: center; }
-    .stat .label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.6; margin-bottom: 2px; }
-    .stat .value { font-size: 20px; font-weight: 600; color: var(--heading-color); }
+    /* ---------- Monitor cards ---------- */
+    .monitors { display: flex; flex-direction: column; gap: 14px; }
 
-    .timeline-bar { display: flex; gap: 2px; height: 18px; margin-top: 6px; }
-    .timeline-bar .segment { flex: 1; border-radius: 2px; background: rgba(0,0,0,0.08); }
-    .timeline-bar .segment.up { background: #2ecc71; }
-    .timeline-bar .segment.degraded { background: #f5a623; }
-    .timeline-bar .segment.down { background: #ff5c6c; }
-    .timeline-bar .segment.no_data { background: rgba(0,0,0,0.08); }
-
-    .mini-graph { margin-top: 14px; height: 60px; position: relative; }
-
-    .incident-history { margin-top: 28px; }
-    .incident-history h2 { font-size: 18px; color: var(--heading-color); margin-bottom: 14px; }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
-    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
-
-    .status-footer {
-      border-top: 1px solid var(--border-color);
-      padding: 24px 0;
-      text-align: center;
-      font-size: 13px;
-      opacity: 0.75;
+    .monitor-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      transition: border-color .2s, transform .2s;
     }
-    .status-footer .last-checked { margin-top: 6px; font-size: 12px; opacity: 0.6; }
+    .monitor-card:hover { border-color: color-mix(in srgb, var(--border) 60%, var(--accent) 30%); }
 
+    .monitor-top { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+    .monitor-top .dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      position: relative;
+    }
+    .monitor-top .dot.up { background: var(--up); }
+    .monitor-top .dot.down { background: var(--down); box-shadow: 0 0 0 4px rgba(239,68,68,.14); }
+    .monitor-top .dot.degraded { background: var(--degraded); box-shadow: 0 0 0 4px rgba(245,158,11,.14); }
+    .monitor-top .dot.pending { background: var(--text-soft); }
+    .monitor-top .dot.down::after {
+      content: ""; position: absolute; inset: -6px; border-radius: 50%;
+      border: 2px solid rgba(239,68,68,.4);
+      animation: pulse 1.6s ease-out infinite;
+    }
+    @keyframes pulse { 0% { transform: scale(.7); opacity: 1; } 100% { transform: scale(1.3); opacity: 0; } }
+
+    .monitor-top .name { flex: 1; min-width: 0; }
+    .monitor-top .name h3 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .monitor-top .name .group { font-size: 12px; color: var(--text-soft); }
+
+    .status-chip {
+      flex-shrink: 0;
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .02em;
+      padding: 4px 12px;
+      border-radius: 999px;
+    }
+    .status-chip.up { background: rgba(34,197,94,.12); color: var(--up); }
+    .status-chip.down { background: rgba(239,68,68,.12); color: var(--down); }
+    .status-chip.degraded { background: rgba(245,158,11,.12); color: var(--degraded); }
+    .status-chip.pending { background: rgba(107,114,128,.12); color: var(--text-soft); }
+
+    /* Stats row */
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin-bottom: 14px; }
+    .stat {
+      background: var(--bg-soft);
+      border-radius: 10px;
+      padding: 10px 14px;
+    }
+    .stat .k { display: block; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--text-soft); }
+    .stat .v { display: block; margin-top: 2px; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; font-variant-numeric: tabular-nums; }
+    .stat .v small { font-size: 12px; font-weight: 500; color: var(--text-soft); }
+
+    /* 24h timeline bar */
+    .timeline-block { margin-top: 4px; }
+    .timeline-block .t-label { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-soft); margin-bottom: 6px; }
+    .timeline-bar { display: flex; gap: 2px; height: 30px; }
+    .timeline-bar .segment { flex: 1; border-radius: 3px; transition: transform .15s; cursor: pointer; }
+    .timeline-bar .segment:hover { transform: scaleY(1.15); }
+    .timeline-bar .segment.up { background: var(--up); opacity: .9; }
+    .timeline-bar .segment.degraded { background: var(--degraded); opacity: .9; }
+    .timeline-bar .segment.down { background: var(--down); opacity: .9; }
+    .timeline-bar .segment.no_data { background: var(--border); }
+
+    .current-incident {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 12px;
+      padding: 10px 14px;
+      border-radius: 10px;
+      background: rgba(239,68,68,.08);
+      border: 1px solid rgba(239,68,68,.2);
+      font-size: 13px;
+      color: var(--down);
+    }
+
+    .mini-graph { margin-top: 16px; height: 70px; position: relative; }
+
+    /* ---------- Layout variants ---------- */
     {% if page.layout == 'grid' %}
-    .monitors { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
-    .monitor-card { margin-bottom: 0; }
+    .monitors { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 14px; }
     {% endif %}
     {% if page.layout == 'compact' %}
-    .monitor-card { padding: 12px 16px; }
-    .monitor-header { margin-bottom: 8px; }
-    .monitor-stats { margin-bottom: 8px; gap: 16px; }
-    .stat .value { font-size: 16px; }
+    .monitor-card { padding: 14px 16px; }
+    .monitor-top { margin-bottom: 10px; }
+    .stats { margin-bottom: 10px; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
+    .stat { padding: 8px 10px; }
+    .stat .v { font-size: 15px; }
+    .timeline-bar { height: 20px; }
     {% endif %}
+
+    /* ---------- Recent incidents ---------- */
+    .incident-list { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .incident-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 6px 20px;
+      padding: 16px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+    .incident-item:last-child { border-bottom: none; }
+    .incident-item .i-name { font-size: 14.5px; font-weight: 600; }
+    .incident-item .i-when { font-size: 12.5px; color: var(--text-soft); font-variant-numeric: tabular-nums; }
+    .incident-item .i-reason { grid-column: 1 / -1; font-size: 13.5px; color: var(--text-soft); }
+    .incident-item .i-badge {
+      grid-row: 1 / 2; grid-column: 2;
+      align-self: center;
+      font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+      padding: 3px 9px; border-radius: 999px;
+      background: var(--bg-soft); color: var(--text-soft);
+    }
+
+    .empty {
+      text-align: center;
+      padding: 48px 20px;
+      color: var(--text-soft);
+      font-size: 14px;
+    }
+
+    /* ---------- Footer ---------- */
+    .footer {
+      border-top: 1px solid var(--border);
+      padding: 26px 0 34px;
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-soft);
+    }
+    .footer .last-checked { margin-top: 4px; font-size: 12px; opacity: .75; }
+
+    @media (max-width: 640px) {
+      .header { padding: 34px 0 30px; }
+      .header h1 { font-size: 23px; }
+      .incident-item { grid-template-columns: 1fr; }
+      .incident-item .i-badge { grid-column: 1; grid-row: auto; justify-self: start; }
+    }
   </style>
 </head>
 <body>
-  <header class="status-header" style="background: var(--header-color);">
-    <div class="container">
+  <header class="header">
+    <div class="wrap">
       {% if page.logo_url %}<img src="{{ page.logo_url }}" class="logo" alt="Logo">{% endif %}
       <h1>{{ page.title }}</h1>
-      {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
-      <div class="overall-uptime">
-        <span class="uptime-badge {% if overall_uptime == 100 %}all-good{% elif overall_uptime >= 98 %}good{% else %}issues{% endif %}">
-          {{ overall_uptime }}% uptime
-        </span>
+      {% if page.description %}<p class="desc">{{ page.description }}</p>{% endif %}
+      <div class="overall-status {% if active_incidents %}down{% elif overall_uptime < 98 %}warn{% else %}{% endif %}">
+        <span class="dot"></span>
+        {% if active_incidents %}
+          Partial Outage
+        {% elif overall_uptime == 100 %}
+          All Systems Operational
+        {% elif overall_uptime >= 98 %}
+          {{ overall_uptime }}% uptime — Operating Normally
+        {% else %}
+          {{ overall_uptime }}% uptime — Degraded
+        {% endif %}
       </div>
     </div>
   </header>
 
-  <main class="container">
-    {% if active_incidents or incident_posts %}
-    <section class="incidents-banner">
+  <main class="wrap">
+    {% if incident_posts %}
+    <div class="section-label"><h2>Active Incidents</h2><span>{{ incident_posts|length }} active</span></div>
+    <div>
       {% for post in incident_posts %}
-      <div class="incident {{ post.severity }}">
-        <span class="badge">{{ post.get_severity_display }}</span>
-        <strong>{{ post.title }}</strong>
-        <p>{{ post.message }}</p>
+      <div class="incident-post {{ post.severity }}">
+        <span class="sev">{{ post.get_severity_display }}</span>
+        <div>
+          <strong>{{ post.title }}</strong>
+          {% if post.message %}<p>{{ post.message }}</p>{% endif %}
+          <time>Started {{ post.started_at|date:"M d, Y H:i" }} UTC</time>
+        </div>
       </div>
       {% endfor %}
-    </section>
+    </div>
     {% endif %}
+
+    <div class="section-label">
+      <h2>Monitors</h2>
+      <span>90-day uptime · 24-hour history</span>
+    </div>
 
     <section class="monitors">
       {% for md in monitors_data %}
-      <div class="monitor-card {% if md.status == 'DOWN' %}down{% elif md.status == 'DEGRADED' %}degraded{% else %}up{% endif %}">
-        <div class="monitor-header">
-          <div class="status-indicator {{ md.status|lower }}"></div>
-          <h3>{{ md.spm.display_name|default:md.monitor.name }}</h3>
-          <span class="status-label {{ md.status|lower }}">{{ md.status }}</span>
+      <div class="monitor-card">
+        <div class="monitor-top">
+          <div class="dot {{ md.status|lower }}"></div>
+          <div class="name">
+            <h3>{{ md.spm.display_name|default:md.monitor.name }}</h3>
+            {% if md.monitor.group %}<div class="group">{{ md.monitor.group }}</div>{% endif %}
+          </div>
+          <span class="status-chip {{ md.status|lower }}">
+            {% if md.status == 'UP' %}Operational{% elif md.status == 'DOWN' %}Down{% elif md.status == 'DEGRADED' %}Degraded{% else %}Pending{% endif %}
+          </span>
         </div>
 
-        {% if page.show_uptime %}
-        <div class="monitor-stats">
+        <div class="stats">
+          {% if page.show_uptime %}
           <div class="stat">
-            <span class="label">Uptime (90d)</span>
-            <span class="value">{{ md.uptime }}%</span>
+            <span class="k">Uptime · 90d</span>
+            <span class="v">{{ md.uptime }}<small>%</small></span>
           </div>
-          {% if md.avg_response_time and page.show_response_time %}
+          {% endif %}
+          {% if page.show_response_time and md.avg_response_time %}
           <div class="stat">
-            <span class="label">Avg Response</span>
-            <span class="value">{{ md.avg_response_time }}ms</span>
+            <span class="k">Avg Response</span>
+            <span class="v">{{ md.avg_response_time }}<small>ms</small></span>
           </div>
           {% endif %}
           <div class="stat">
-            <span class="label">Checks</span>
-            <span class="value">{{ md.total_checks }}</span>
+            <span class="k">Checks · 90d</span>
+            <span class="v">{{ md.total_checks }}</span>
+          </div>
+          <div class="stat">
+            <span class="k">Status</span>
+            <span class="v" style="font-size:14px; padding-top:4px;">
+              {% if md.monitor.last_checked_at %}{{ md.monitor.last_checked_at|date:"M d, H:i" }}{% else %}—{% endif %}
+            </span>
+          </div>
+        </div>
+
+        {% if page.show_timeline and md.timeline %}
+        <div class="timeline-block">
+          <div class="t-label"><span>24 hours ago</span><span>Now</span></div>
+          <div class="timeline-bar">
+            {% for seg in md.timeline %}
+            <div class="segment {{ seg.status }}"
+                 title="{{ seg.label }} — {{ seg.uptime|default:'no data' }}% uptime"></div>
+            {% endfor %}
           </div>
         </div>
         {% endif %}
 
-        {% if page.show_timeline and md.timeline %}
-        <div class="timeline-bar">
-          {% for seg in md.timeline %}
-          <div class="segment {{ seg.status }}" title="{{ seg.uptime }}% — {{ seg.label }}"></div>
-          {% endfor %}
+        {% if md.current_incident %}
+        <div class="current-incident">
+          <span style="font-size:13px;">◉</span>
+          <span>Ongoing incident since {{ md.current_incident.opened_at|date:"M d, H:i" }} UTC</span>
         </div>
         {% endif %}
 
         {% if page.show_graph and md.avg_response_time %}
         <div class="mini-graph" data-monitor-id="{{ md.monitor.id }}">
-          <canvas id="graph-{{ md.monitor.id }}" height="60"></canvas>
+          <canvas id="graph-{{ md.monitor.id }}" height="70"></canvas>
         </div>
         {% endif %}
       </div>
       {% endfor %}
     </section>
 
-    {% if recent_incidents and page.show_incidents %}
-    <section class="incident-history">
-      <h2>Recent Incidents</h2>
-      <table>
-        {% for inc in recent_incidents %}
-        <tr>
-          <td>{{ inc.monitor.name }}</td>
-          <td>{{ inc.opened_at|date:"M d, H:i" }}</td>
-          <td>{{ inc.closed_at|date:"M d, H:i" }}</td>
-          <td>{{ inc.reason }}</td>
-        </tr>
-        {% endfor %}
-      </table>
-    </section>
+    {% if page.show_incidents %}
+    <div class="section-label"><h2>Recent Incidents</h2><span>Last 7 days</span></div>
+    {% if recent_incidents %}
+    <div class="incident-list">
+      {% for inc in recent_incidents %}
+      <div class="incident-item">
+        <div class="i-name">{{ inc.monitor.name }}</div>
+        <div class="i-when">{{ inc.opened_at|date:"M d, H:i" }} – {{ inc.closed_at|date:"M d, H:i" }}</div>
+        {% if inc.reason %}<div class="i-reason">{{ inc.reason }}</div>{% endif %}
+        <span class="i-badge">Resolved</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty">No incidents in the last 7 days.</div>
+    {% endif %}
     {% endif %}
   </main>
 
-  <footer class="status-footer">
-    <div class="container">
+  <footer class="footer">
+    <div class="wrap">
       <p>{{ page.footer_text }}</p>
-      <p class="last-checked">Last updated: {{ now|date:"Y-m-d H:i:s" }} UTC</p>
+      <p class="last-checked">Last updated {{ now|date:"Y-m-d H:i:s" }} UTC</p>
     </div>
   </footer>
 
@@ -260,20 +457,27 @@
               labels: data.labels,
               datasets: [{
                 data: data.values,
-                borderColor: 'var(--accent-color)',
-                borderWidth: 1.5,
-                fill: false,
+                borderColor: 'var(--accent)',
+                borderWidth: 2,
+                fill: true,
+                backgroundColor: function(ctx) {
+                  var g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
+                  g.addColorStop(0, 'color-mix(in srgb, var(--accent) 25%, transparent)');
+                  g.addColorStop(1, 'transparent');
+                  return g;
+                },
                 pointRadius: 0,
-                tension: 0.3,
+                pointHitRadius: 12,
+                tension: 0.35,
               }]
             },
             options: {
               responsive: true,
               maintainAspectRatio: false,
-              plugins: { legend: { display: false } },
+              plugins: { legend: { display: false }, tooltip: { enabled: true } },
               scales: {
                 x: { display: false },
-                y: { display: false }
+                y: { display: false, beginAtZero: false }
               }
             }
           });

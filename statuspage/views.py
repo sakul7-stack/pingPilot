@@ -1,4 +1,3 @@
-import json
 from datetime import timedelta
 from django.db.models import Avg, Count, Q, F
 from django.utils import timezone
@@ -172,7 +171,7 @@ def render_public_page(request, page, preview=False):
             'uptime': uptime,
             'total_checks': total,
             'avg_response_time': round(avg_r, 1) if avg_r else None,
-            'timeline': json.dumps(timeline),
+            'timeline': timeline,
             'status': monitor.last_status or 'PENDING',
             'current_incident': Incident.objects.filter(
                 monitor=monitor, closed_at__isnull=True
