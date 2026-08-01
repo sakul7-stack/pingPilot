@@ -196,6 +196,8 @@
 
     .monitor-top .name { flex: 1; min-width: 0; }
     .monitor-top .name h3 { font-size: 16px; font-weight: 650; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .monitor-link { color: var(--text); text-decoration: none; }
+    .monitor-link:hover { color: var(--accent); text-decoration: underline; }
     .monitor-top .name .group { font-size: 12px; color: var(--text-soft); }
 
     .status-chip {
@@ -247,6 +249,11 @@
     }
 
     .mini-graph { margin-top: 16px; height: 70px; position: relative; }
+    .graph-empty {
+      display: flex; align-items: center; justify-content: center;
+      height: 70px; font-size: 12px; color: var(--text-soft);
+      background: var(--bg-soft); border-radius: 10px;
+    }
 
     /* ---------- Layout variants ---------- */
     {% if page.layout == 'grid' %}
@@ -356,7 +363,15 @@
         <div class="monitor-top">
           <div class="dot {{ md.status|lower }}"></div>
           <div class="name">
-            <h3>{{ md.spm.display_name|default:md.monitor.name }}</h3>
+            <h3>
+              {% if md.monitor.check_type == 'http' and md.monitor.url %}
+              <a href="{{ md.monitor.url }}" target="_blank" rel="noopener" class="monitor-link">
+                {{ md.spm.display_name|default:md.monitor.name }}
+              </a>
+              {% else %}
+              {{ md.spm.display_name|default:md.monitor.name }}
+              {% endif %}
+            </h3>
             {% if md.monitor.group %}<div class="group">{{ md.monitor.group }}</div>{% endif %}
           </div>
           <span class="status-chip {{ md.status|lower }}">
@@ -408,7 +423,7 @@
         </div>
         {% endif %}
 
-        {% if page.show_graph and md.avg_response_time %}
+        {% if page.show_graph %}
         <div class="mini-graph" data-monitor-id="{{ md.monitor.id }}">
           <canvas id="graph-{{ md.monitor.id }}" height="70"></canvas>
         </div>
@@ -448,10 +463,13 @@
   <script>
     document.querySelectorAll('.mini-graph').forEach(function(el) {
       var mid = el.dataset.monitorId;
-      fetch('{{ site_url }}/dashboard/public/status/{{ page.slug }}/graph/' + mid + '/')
-        .then(r => r.json())
+      var canvas = el.querySelector('canvas');
+      fetch('{{ request.scheme }}://{{ request.get_host }}/dashboard/public/status/{{ page.slug }}/graph/' + mid + '/')
+        .then(function(r) { if (!r.ok) throw new Error('bad status'); return r.json(); })
         .then(function(data) {
-          new Chart(el.querySelector('canvas'), {
+          if (!data.labels || data.labels.length === 0) throw new Error('no data');
+          if (typeof Chart === 'undefined') throw new Error('no chart lib');
+          new Chart(canvas, {
             type: 'line',
             data: {
               labels: data.labels,
@@ -460,12 +478,7 @@
                 borderColor: 'var(--accent)',
                 borderWidth: 2,
                 fill: true,
-                backgroundColor: function(ctx) {
-                  var g = ctx.chart.ctx.createLinearGradient(0, 0, 0, ctx.chart.height);
-                  g.addColorStop(0, 'color-mix(in srgb, var(--accent) 25%, transparent)');
-                  g.addColorStop(1, 'transparent');
-                  return g;
-                },
+                backgroundColor: 'rgba(0,0,0,0)',
                 pointRadius: 0,
                 pointHitRadius: 12,
                 tension: 0.35,
@@ -474,6 +487,7 @@
             options: {
               responsive: true,
               maintainAspectRatio: false,
+              animation: false,
               plugins: { legend: { display: false }, tooltip: { enabled: true } },
               scales: {
                 x: { display: false },
@@ -481,6 +495,11 @@
               }
             }
           });
+        })
+        .catch(function() {
+          canvas.insertAdjacentHTML('afterend',
+            '<div class="graph-empty">No response-time data available</div>');
+          canvas.remove();
         });
     });
   </script>
