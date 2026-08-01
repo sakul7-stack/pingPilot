@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+      <li class="breadcrumb-item"><a href="{% url 'statuspage:list' %}">Status Pages</a></li>
+      <li class="breadcrumb-item active">Edit: {{ page.title }}</li>
+    </ol>
+  </nav>
+
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Edit: {{ page.title }}</h2>
+    <div>
+      <a href="{% url 'statuspage:preview' page.pk %}" target="_blank" class="btn btn-outline-info">Preview</a>
+      <form method="post" action="{% url 'statuspage:delete' page.pk %}" class="d-inline"
+            onsubmit="return confirm('Delete {{ page.title }}?')">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger">Delete</button>
+      </form>
+    </div>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  <ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-general">General</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-monitors">Monitors</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-theme">Theme</button></li>
+    <li class="nav-item"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-domain">Domain</button></li>
+  </ul>
+
+  <form method="post">
+    {% csrf_token %}
+    <div class="tab-content">
+      <div class="tab-pane fade show active" id="tab-general">
+        <div class="card mb-4">
+          <div class="card-body">
+            {% if form.non_field_errors %}
+              {% for e in form.non_field_errors %}<div class="alert alert-danger">{{ e }}</div>{% endfor %}
+            {% endif %}
+
+            <div class="mb-3">
+              <label class="form-label">{{ form.title.label }}</label>
+              {{ form.title }}
+              {% for e in form.title.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">{{ form.description.label }}</label>
+              {{ form.description }}
+            </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.logo_url.label }}</label>
+                {{ form.logo_url }}
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.favicon_url.label }}</label>
+                {{ form.favicon_url }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">{{ form.footer_text.label }}</label>
+              {{ form.footer_text }}
+            </div>
+            <div class="mb-3">
+              <label class="form-label">{{ form.meta_description.label }}</label>
+              {{ form.meta_description }}
+            </div>
+            <div class="form-check mb-3">
+              {{ form.is_published }}
+              <label class="form-check-label" for="{{ form.is_published.id_for_label }}">Published (publicly accessible)</label>
+            </div>
+            <div class="form-check mb-3">
+              {{ form.password_protected }}
+              <label class="form-check-label" for="{{ form.password_protected.id_for_label }}">Password protect this page</label>
+            </div>
+            <div class="mb-3" id="access-password-field">
+              <label class="form-label">Access Password</label>
+              <input type="password" name="access_password" class="form-control" placeholder="Leave blank to keep current">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-monitors">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row mb-3">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.sort_order.label }}</label>
+                {{ form.sort_order }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.layout.label }}</label>
+                {{ form.layout }}
+              </div>
+            </div>
+            <div class="mb-3">
+              <div class="form-check">
+                {{ form.show_uptime }}
+                <label class="form-check-label" for="{{ form.show_uptime.id_for_label }}">Show uptime %</label>
+              </div>
+              <div class="form-check">
+                {{ form.show_response_time }}
+                <label class="form-check-label" for="{{ form.show_response_time.id_for_label }}">Show response time</label>
+              </div>
+              <div class="form-check">
+                {{ form.show_incidents }}
+                <label class="form-check-label" for="{{ form.show_incidents.id_for_label }}">Show incidents</label>
+              </div>
+              <div class="form-check">
+                {{ form.show_timeline }}
+                <label class="form-check-label" for="{{ form.show_timeline.id_for_label }}">Show timeline bar</label>
+              </div>
+              <div class="form-check">
+                {{ form.show_graph }}
+                <label class="form-check-label" for="{{ form.show_graph.id_for_label }}">Show response time graph</label>
+              </div>
+            </div>
+
+            <h6 class="mt-4 mb-3">Select which monitors to display</h6>
+            {{ formset.management_form }}
+            <div id="monitor-forms">
+              {% for f in formset %}
+              <div class="border rounded p-2 mb-2 monitor-form">
+                {{ f.id }}
+                <div class="row g-2 align-items-center">
+                  <div class="col-4">
+                    <label class="form-label small mb-0">Monitor</label>
+                    {{ f.monitor }}
+                  </div>
+                  <div class="col-4">
+                    <label class="form-label small mb-0">Display name (optional)</label>
+                    {{ f.display_name }}
+                  </div>
+                  <div class="col-2">
+                    <div class="form-check mt-4">
+                      {{ f.show_on_page }}
+                      <label class="form-check-label" for="{{ f.show_on_page.id_for_label }}">Show</label>
+                    </div>
+                  </div>
+                  <div class="col-2 text-end">
+                    {% if f.DELETE %}
+                    <div class="form-check mt-4">
+                      {{ f.DELETE }}
+                      <label class="form-check-label text-danger" for="{{ f.DELETE.id_for_label }}">Delete</label>
+                    </div>
+                    {% endif %}
+                  </div>
+                </div>
+                {% for e in f.non_field_errors %}<div class="text-danger small mt-1">{{ e }}</div>{% endfor %}
+              </div>
+              {% endfor %}
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMonitorRow()">+ Add Monitor</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-theme">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.theme.label }}</label>
+                {{ form.theme }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.header_color.label }}</label>
+                {{ form.header_color }}
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label">{{ form.accent_color.label }}</label>
+                {{ form.accent_color }}
+              </div>
+            </div>
+            <a href="{% url 'statuspage:preview' page.pk %}" target="_blank" class="btn btn-outline-info btn-sm">Live Preview</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="tab-pane fade" id="tab-domain">
+        <div class="card mb-4">
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label">{{ form.custom_domain.label }}</label>
+              {{ form.custom_domain }}
+              {% for e in form.custom_domain.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
+              <div class="form-text text-muted">Optional. Use your own domain like <code>status.example.com</code>.</div>
+            </div>
+
+            <div class="alert alert-info" id="dns-instructions" style="font-size:14px;">
+              <strong>DNS Configuration</strong>
+              <div class="mt-2">Record Type: <code>CNAME</code></div>
+              <div>Name: <code id="dns-name">status.example.com</code></div>
+              <div>Target: <code>{{ status_page_domain|default:"your-status-domain.com" }}</code></div>
+              <hr>
+              <strong>TXT Record (verification)</strong>
+              <div class="mt-2">Name: <code id="txt-name">_{{ verification_prefix }}.status.example.com</code></div>
+              <div>Value: <code id="txt-value">token</code></div>
+              <div>TTL: <code>300</code></div>
+            </div>
+
+            {% if page.custom_domain %}
+            <div class="d-flex gap-2 flex-wrap">
+              <button type="button" class="btn btn-outline-primary" onclick="verifyDomain()" id="verify-btn">Verify Domain</button>
+              <button type="button" class="btn btn-outline-secondary" onclick="copyDns()">Copy DNS Config</button>
+              <span id="verify-result" class="align-self-center"></span>
+            </div>
+            {% else %}
+            <div class="text-muted small">Save the page with a custom domain to enable verification.</div>
+            {% endif %}
+
+            <div class="mt-4">
+              <h6>Links</h6>
+              <div>Public URL: <a href="{{ page.public_url }}" target="_blank" class="text-break">{{ page.public_url }}</a></div>
+              {% if page.custom_url %}
+              <div>Custom URL: <a href="{{ page.custom_url }}" target="_blank" class="text-break">{{ page.custom_url }}</a></div>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-5">
+      <button type="submit" class="btn btn-success btn-lg">Save Changes</button>
+      <a href="{% url 'statuspage:list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function updateDns() {
+  const domain = document.querySelector('input[name="custom_domain"]').value.trim();
+  if (domain) {
+    document.getElementById('dns-name').textContent = domain;
+    document.getElementById('txt-name').textContent = '_{{ verification_prefix }}.' + domain;
+  }
+}
+document.querySelector('input[name="custom_domain"]').addEventListener('input', updateDns);
+
+function copyDns() {
+  const domain = document.querySelector('input[name="custom_domain"]').value.trim();
+  const text = [
+    'CNAME Record:',
+    '  Name: ' + (domain || 'status.example.com'),
+    '  Target: {{ status_page_domain|default:"your-status-domain.com" }}',
+    '',
+    'TXT Record (verification):',
+    '  Name: ' + ('_{{ verification_prefix }}.' + (domain || 'status.example.com')),
+    '  Value: (see below)',
+    '  TTL: 300'
+  ].join('\n');
+  navigator.clipboard.writeText(text).then(() => alert('DNS config copied!'));
+}
+
+function verifyDomain() {
+  const btn = document.getElementById('verify-btn');
+  const result = document.getElementById('verify-result');
+  btn.disabled = true;
+  result.textContent = 'Checking...';
+  fetch('{% url "statuspage:verify_domain" page.pk %}', {
+    method: 'POST',
+    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.verified) {
+      result.innerHTML = '<span class="text-success">Verified!</span>';
+      location.reload();
+    } else {
+      result.innerHTML = '<span class="text-danger">' + (data.error || 'Verification failed') + '</span>';
+    }
+  })
+  .catch(() => result.innerHTML = '<span class="text-danger">Request failed</span>')
+  .finally(() => btn.disabled = false);
+}
+
+let monIdx = {{ formset.total_form_count }};
+const emptyForm = `{{ formset.empty_form.as_p|escapejs }}`;
+function addMonitorRow() {
+  const container = document.getElementById('monitor-forms');
+  const div = document.createElement('div');
+  div.className = 'border rounded p-2 mb-2 monitor-form';
+  div.innerHTML = emptyForm.replace(/__prefix__/g, monIdx);
+  container.appendChild(div);
+  monIdx++;
+  document.querySelector('#id_monitors-TOTAL_FORMS').value = monIdx;
+}
+
+document.addEventListener('DOMContentLoaded', updateDns);
+</script>
+{% endblock %}

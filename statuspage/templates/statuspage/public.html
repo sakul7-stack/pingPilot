@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ page.theme }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }}</title>
+  <meta name="description" content="{{ page.meta_description }}">
+  {% if page.favicon_url %}<link rel="icon" href="{{ page.favicon_url }}">{% endif %}
+
+  <style>
+    :root {
+      --header-color: {{ page.header_color }};
+      --accent-color: {{ page.accent_color }};
+      --bg-color: {% if page.theme == 'dark' %}#0f0f23{% elif page.theme == 'minimal' %}#ffffff{% else %}#f5f7fa{% endif %};
+      --card-bg: {% if page.theme == 'dark' %}#1a1a2e{% elif page.theme == 'minimal' %}#ffffff{% else %}#ffffff{% endif %};
+      --text-color: {% if page.theme == 'dark' %}#e0e0e0{% else %}#333333{% endif %};
+      --heading-color: {% if page.theme == 'dark' %}#ffffff{% else %}#1a1a2e{% endif %};
+      --border-color: {% if page.theme == 'dark' %}#2a2a4a{% else %}#e0e0e0{% endif %};
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: {% if page.theme == 'corporate' %}'Georgia', 'Times New Roman', serif{% else %}-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif{% endif %};
+      background: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+    }
+
+    .container { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+    .status-header {
+      background: var(--header-color);
+      color: #fff;
+      padding: 48px 0 36px;
+      text-align: center;
+    }
+    .status-header .logo { max-width: 90px; max-height: 90px; margin-bottom: 16px; border-radius: 8px; }
+    .status-header h1 { font-size: 32px; margin-bottom: 8px; }
+    .status-header .description { opacity: 0.85; margin-bottom: 18px; font-size: 15px; }
+    .overall-uptime { display: flex; justify-content: center; }
+    .uptime-badge {
+      display: inline-block;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .uptime-badge.all-good { background: rgba(46, 204, 113, 0.2); color: #2ecc71; border: 1px solid #2ecc71; }
+    .uptime-badge.good { background: rgba(245, 166, 35, 0.15); color: #f5a623; border: 1px solid #f5a623; }
+    .uptime-badge.issues { background: rgba(255, 92, 108, 0.15); color: #ff5c6c; border: 1px solid #ff5c6c; }
+
+    main { padding: 32px 0 48px; }
+
+    .incidents-banner { margin-bottom: 28px; }
+    .incident {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-left: 4px solid var(--accent-color);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin-bottom: 12px;
+    }
+    .incident.maintenance { border-left-color: #f5a623; }
+    .incident.investigating { border-left-color: #ff5c6c; }
+    .incident.identified { border-left-color: #e67e22; }
+    .incident.monitoring { border-left-color: #3498db; }
+    .incident.resolved { border-left-color: #2ecc71; }
+    .incident .badge {
+      display: inline-block;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 3px 8px;
+      border-radius: 4px;
+      background: rgba(0,0,0,0.08);
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    .incident p { margin-top: 6px; font-size: 14px; opacity: 0.85; }
+
+    .monitor-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 14px;
+    }
+    .monitor-card.down { border-left: 4px solid #ff5c6c; }
+    .monitor-card.degraded { border-left: 4px solid #f5a623; }
+    .monitor-card.up { border-left: 4px solid #2ecc71; }
+
+    .monitor-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .monitor-header h3 { flex: 1; font-size: 17px; color: var(--heading-color); }
+    .status-indicator { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .status-indicator.up { background: #2ecc71; }
+    .status-indicator.down { background: #ff5c6c; }
+    .status-indicator.degraded { background: #f5a623; }
+    .status-indicator.pending { background: #95a5a6; }
+    .status-label {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      padding: 3px 10px;
+      border-radius: 999px;
+    }
+    .status-label.up { background: rgba(46,204,113,0.15); color: #2ecc71; }
+    .status-label.down { background: rgba(255,92,108,0.15); color: #ff5c6c; }
+    .status-label.degraded { background: rgba(245,166,35,0.15); color: #f5a623; }
+    .status-label.pending { background: rgba(149,165,166,0.15); color: #95a5a6; }
+
+    .monitor-stats { display: flex; gap: 28px; flex-wrap: wrap; margin-bottom: 14px; }
+    .stat { text-align: center; }
+    .stat .label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.6; margin-bottom: 2px; }
+    .stat .value { font-size: 20px; font-weight: 600; color: var(--heading-color); }
+
+    .timeline-bar { display: flex; gap: 2px; height: 18px; margin-top: 6px; }
+    .timeline-bar .segment { flex: 1; border-radius: 2px; background: rgba(0,0,0,0.08); }
+    .timeline-bar .segment.up { background: #2ecc71; }
+    .timeline-bar .segment.degraded { background: #f5a623; }
+    .timeline-bar .segment.down { background: #ff5c6c; }
+    .timeline-bar .segment.no_data { background: rgba(0,0,0,0.08); }
+
+    .mini-graph { margin-top: 14px; height: 60px; position: relative; }
+
+    .incident-history { margin-top: 28px; }
+    .incident-history h2 { font-size: 18px; color: var(--heading-color); margin-bottom: 14px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--border-color); font-size: 14px; }
+    th { font-size: 12px; text-transform: uppercase; letter-spacing: 0.4px; opacity: 0.7; }
+
+    .status-footer {
+      border-top: 1px solid var(--border-color);
+      padding: 24px 0;
+      text-align: center;
+      font-size: 13px;
+      opacity: 0.75;
+    }
+    .status-footer .last-checked { margin-top: 6px; font-size: 12px; opacity: 0.6; }
+
+    {% if page.layout == 'grid' %}
+    .monitors { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .monitor-card { margin-bottom: 0; }
+    {% endif %}
+    {% if page.layout == 'compact' %}
+    .monitor-card { padding: 12px 16px; }
+    .monitor-header { margin-bottom: 8px; }
+    .monitor-stats { margin-bottom: 8px; gap: 16px; }
+    .stat .value { font-size: 16px; }
+    {% endif %}
+  </style>
+</head>
+<body>
+  <header class="status-header" style="background: var(--header-color);">
+    <div class="container">
+      {% if page.logo_url %}<img src="{{ page.logo_url }}" class="logo" alt="Logo">{% endif %}
+      <h1>{{ page.title }}</h1>
+      {% if page.description %}<p class="description">{{ page.description }}</p>{% endif %}
+      <div class="overall-uptime">
+        <span class="uptime-badge {% if overall_uptime == 100 %}all-good{% elif overall_uptime >= 98 %}good{% else %}issues{% endif %}">
+          {{ overall_uptime }}% uptime
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    {% if active_incidents or incident_posts %}
+    <section class="incidents-banner">
+      {% for post in incident_posts %}
+      <div class="incident {{ post.severity }}">
+        <span class="badge">{{ post.get_severity_display }}</span>
+        <strong>{{ post.title }}</strong>
+        <p>{{ post.message }}</p>
+      </div>
+      {% endfor %}
+    </section>
+    {% endif %}
+
+    <section class="monitors">
+      {% for md in monitors_data %}
+      <div class="monitor-card {% if md.status == 'DOWN' %}down{% elif md.status == 'DEGRADED' %}degraded{% else %}up{% endif %}">
+        <div class="monitor-header">
+          <div class="status-indicator {{ md.status|lower }}"></div>
+          <h3>{{ md.spm.display_name|default:md.monitor.name }}</h3>
+          <span class="status-label {{ md.status|lower }}">{{ md.status }}</span>
+        </div>
+
+        {% if page.show_uptime %}
+        <div class="monitor-stats">
+          <div class="stat">
+            <span class="label">Uptime (90d)</span>
+            <span class="value">{{ md.uptime }}%</span>
+          </div>
+          {% if md.avg_response_time and page.show_response_time %}
+          <div class="stat">
+            <span class="label">Avg Response</span>
+            <span class="value">{{ md.avg_response_time }}ms</span>
+          </div>
+          {% endif %}
+          <div class="stat">
+            <span class="label">Checks</span>
+            <span class="value">{{ md.total_checks }}</span>
+          </div>
+        </div>
+        {% endif %}
+
+        {% if page.show_timeline and md.timeline %}
+        <div class="timeline-bar">
+          {% for seg in md.timeline %}
+          <div class="segment {{ seg.status }}" title="{{ seg.uptime }}% — {{ seg.label }}"></div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if page.show_graph and md.avg_response_time %}
+        <div class="mini-graph" data-monitor-id="{{ md.monitor.id }}">
+          <canvas id="graph-{{ md.monitor.id }}" height="60"></canvas>
+        </div>
+        {% endif %}
+      </div>
+      {% endfor %}
+    </section>
+
+    {% if recent_incidents and page.show_incidents %}
+    <section class="incident-history">
+      <h2>Recent Incidents</h2>
+      <table>
+        {% for inc in recent_incidents %}
+        <tr>
+          <td>{{ inc.monitor.name }}</td>
+          <td>{{ inc.opened_at|date:"M d, H:i" }}</td>
+          <td>{{ inc.closed_at|date:"M d, H:i" }}</td>
+          <td>{{ inc.reason }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </section>
+    {% endif %}
+  </main>
+
+  <footer class="status-footer">
+    <div class="container">
+      <p>{{ page.footer_text }}</p>
+      <p class="last-checked">Last updated: {{ now|date:"Y-m-d H:i:s" }} UTC</p>
+    </div>
+  </footer>
+
+  {% if page.show_graph %}
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    document.querySelectorAll('.mini-graph').forEach(function(el) {
+      var mid = el.dataset.monitorId;
+      fetch('{{ site_url }}/dashboard/public/status/{{ page.slug }}/graph/' + mid + '/')
+        .then(r => r.json())
+        .then(function(data) {
+          new Chart(el.querySelector('canvas'), {
+            type: 'line',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                data: data.values,
+                borderColor: 'var(--accent-color)',
+                borderWidth: 1.5,
+                fill: false,
+                pointRadius: 0,
+                tension: 0.3,
+              }]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: { legend: { display: false } },
+              scales: {
+                x: { display: false },
+                y: { display: false }
+              }
+            }
+          });
+        });
+    });
+  </script>
+  {% endif %}
+</body>
+</html>

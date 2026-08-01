@@ -36,6 +36,15 @@ TELEGRAM_BOT_TOKEN = os.getenv("TELEGRAM_BOT_TOKEN")
 PUSHOVER_APP_TOKEN = os.getenv("PUSHOVER_TOKEN")
 CSRF_TRUSTED_ORIGINS = [SITE_URL]
 
+# Status Page — all configurable via .env, no hardcoded domains
+STATUS_PAGE_DOMAIN = os.getenv('STATUS_PAGE_DOMAIN', '')  # e.g. statuspage.yourdomain.com
+VERIFICATION_PREFIX = os.getenv('VERIFICATION_PREFIX', '_pingpilot')
+ENABLE_CUSTOM_DOMAINS = os.getenv('ENABLE_CUSTOM_DOMAINS', 'False') == 'True'
+
+# Rate limiting for status page password attempts and domain verification
+RATELIMIT_ENABLE = True
+RATELIMIT_USE_CACHE = 'default'
+
 
 # Application definition
 
@@ -62,6 +71,7 @@ INSTALLED_APPS = [
 'dashboard',
 'core',
 'heartbeat',
+'statuspage',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +86,7 @@ MIDDLEWARE = [
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "django_htmx.middleware.HtmxMiddleware",
     "allauth.account.middleware.AccountMiddleware",
+    "statuspage.middleware.CustomDomainMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"

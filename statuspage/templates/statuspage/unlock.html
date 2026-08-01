@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ page.title }} — Password Required</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: {{ page.header_color }};
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .unlock {
+      background: rgba(0,0,0,0.25);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    h1 { font-size: 22px; margin-bottom: 8px; }
+    p { opacity: 0.8; margin-bottom: 24px; font-size: 14px; }
+    form { display: flex; flex-direction: column; gap: 12px; }
+    input[type="password"] {
+      padding: 12px 14px;
+      border-radius: 8px;
+      border: none;
+      font-size: 15px;
+      background: #fff;
+      color: #1a1a2e;
+    }
+    button {
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      background: {{ page.accent_color }};
+      color: #0f0f23;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .error { color: #ff5c6c; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="unlock">
+    <h1>{{ page.title }}</h1>
+    <p>This status page is password protected. Enter the password to continue.</p>
+    <form method="post">
+      {% csrf_token %}
+      <input type="password" name="password" placeholder="Password" autofocus required>
+      <button type="submit">Unlock</button>
+    </form>
+  </div>
+</body>
+</html>

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h2 class="mb-0">Status Pages</h2>
+    <a href="{% url 'statuspage:create' %}" class="btn btn-success">+ Create Status Page</a>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+        {{ message }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      </div>
+    {% endfor %}
+  {% endif %}
+
+  {% if pages %}
+    <div class="table-responsive">
+      <table class="table table-hover align-middle">
+        <thead class="table-dark">
+          <tr>
+            <th>Title</th>
+            <th>Status</th>
+            <th>Theme</th>
+            <th>Views</th>
+            <th>Public URL</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for p in pages %}
+          <tr>
+            <td><a href="{% url 'statuspage:edit' p.pk %}">{{ p.title }}</a></td>
+            <td>
+              {% if not p.is_published %}
+                <span class="badge bg-secondary">Unpublished</span>
+              {% elif p.password_protected %}
+                <span class="badge bg-warning text-dark">Protected</span>
+              {% else %}
+                <span class="badge bg-success">Live</span>
+              {% endif %}
+              {% if p.custom_domain %}
+                {% if p.domain_verified %}
+                  <span class="badge bg-success">Domain ✓</span>
+                {% else %}
+                  <span class="badge bg-danger">Domain unverified</span>
+                {% endif %}
+              {% endif %}
+            </td>
+            <td>{{ p.get_theme_display }}</td>
+            <td>{{ p.view_count }}</td>
+            <td>
+              <a href="{{ p.public_url }}" target="_blank" class="text-break" style="font-size:13px;">{{ p.public_url }}</a>
+            </td>
+            <td class="text-nowrap">
+              <a href="{% url 'statuspage:edit' p.pk %}" class="btn btn-sm btn-outline-warning">Edit</a>
+              <a href="{% url 'statuspage:preview' p.pk %}" class="btn btn-sm btn-outline-info" target="_blank">Preview</a>
+              <form method="post" action="{% url 'statuspage:delete' p.pk %}" class="d-inline"
+                    onsubmit="return confirm('Delete {{ p.title }}?')">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  {% else %}
+    <div class="text-center py-5">
+      <p class="text-muted fs-5">You have no status pages yet.</p>
+      <a href="{% url 'statuspage:create' %}" class="btn btn-success btn-lg">Create your first status page</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
