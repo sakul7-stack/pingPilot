@@ -16,7 +16,7 @@ from urllib.parse import urlparse
 
 from heartbeat.models import HeartBeat as Heartbeat, Incident
 from .models import StatusPage, StatusPageIncident
-from .forms import StatusPageForm, StatusPageMonitorFormSet
+from .forms import StatusPageForm, StatusPageCreateForm, StatusPageMonitorFormSet
 from .utils import build_timeline
 
 
@@ -36,7 +36,7 @@ def statuspage_list(request):
 @login_required
 def statuspage_create(request):
     if request.method == 'POST':
-        form = StatusPageForm(request.POST)
+        form = StatusPageCreateForm(request.POST)
         if form.is_valid():
             page = form.save(commit=False)
             page.user = request.user
@@ -44,11 +44,10 @@ def statuspage_create(request):
             page.slug = uuid.uuid4().hex[:12]
             page.domain_verification_token = get_random_string(64)
             page.save()
-            form.save_m2m()
             messages.success(request, 'Status page created!')
             return redirect('statuspage:edit', pk=page.pk)
     else:
-        form = StatusPageForm()
+        form = StatusPageCreateForm()
     return render(request, 'statuspage/create.html', {
         'form': form,
         'site_url': settings.SITE_URL.rstrip('/'),

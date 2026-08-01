@@ -10,14 +10,22 @@ class StatusPageForm(forms.ModelForm):
         model = StatusPage
         exclude = ['user', 'slug', 'domain_verified',
                     'domain_verification_token', 'view_count',
-                    'created_at', 'updated_at']
+                    'created_at', 'updated_at', 'domain_claimed_at',
+                    'dns_instructions']
         widgets = {
             'description': forms.Textarea(attrs={'rows': 3}),
             'header_color': forms.TextInput(attrs={'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'type': 'color'}),
-            'access_password': forms.PasswordInput(),
+            'access_password': forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
             'footer_text': forms.Textarea(attrs={'rows': 2}),
+            'logo_url': forms.URLInput(attrs={'autocomplete': 'off', 'placeholder': 'https://example.com/logo.png'}),
+            'favicon_url': forms.URLInput(attrs={'autocomplete': 'off', 'placeholder': 'https://example.com/favicon.ico'}),
         }
+
+
+class StatusPageCreateForm(StatusPageForm):
+    class Meta(StatusPageForm.Meta):
+        fields = ['title', 'description', 'theme']
 
 
 class StatusPageMonitorForm(forms.ModelForm):
