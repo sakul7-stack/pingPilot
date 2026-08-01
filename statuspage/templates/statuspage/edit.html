@@ -97,61 +97,75 @@
               <div class="col-md-4 mb-3">
                 <label class="form-label">{{ form.sort_order.label }}</label>
                 {{ form.sort_order }}
+                <div class="form-text text-muted">How monitors are ordered on the page.</div>
               </div>
               <div class="col-md-4 mb-3">
                 <label class="form-label">{{ form.layout.label }}</label>
                 {{ form.layout }}
               </div>
             </div>
-            <div class="mb-3">
-              <div class="form-check">
-                {{ form.show_uptime }}
-                <label class="form-check-label" for="{{ form.show_uptime.id_for_label }}">Show uptime %</label>
+
+            <div class="row mb-3">
+              <div class="col-md-5">
+                <label class="form-label">Show on page</label>
+                <div class="d-flex flex-wrap gap-4">
+                  <div class="form-check">
+                    {{ form.show_uptime }}
+                    <label class="form-check-label" for="{{ form.show_uptime.id_for_label }}">Uptime %</label>
+                  </div>
+                  <div class="form-check">
+                    {{ form.show_response_time }}
+                    <label class="form-check-label" for="{{ form.show_response_time.id_for_label }}">Response time</label>
+                  </div>
+                  <div class="form-check">
+                    {{ form.show_timeline }}
+                    <label class="form-check-label" for="{{ form.show_timeline.id_for_label }}">Timeline bar</label>
+                  </div>
+                  <div class="form-check">
+                    {{ form.show_graph }}
+                    <label class="form-check-label" for="{{ form.show_graph.id_for_label }}">Graph</label>
+                  </div>
+                  <div class="form-check">
+                    {{ form.show_incidents }}
+                    <label class="form-check-label" for="{{ form.show_incidents.id_for_label }}">Incidents</label>
+                  </div>
+                </div>
               </div>
-              <div class="form-check">
-                {{ form.show_response_time }}
-                <label class="form-check-label" for="{{ form.show_response_time.id_for_label }}">Show response time</label>
-              </div>
-              <div class="form-check">
-                {{ form.show_incidents }}
-                <label class="form-check-label" for="{{ form.show_incidents.id_for_label }}">Show incidents</label>
-              </div>
-              <div class="form-check">
-                {{ form.show_timeline }}
-                <label class="form-check-label" for="{{ form.show_timeline.id_for_label }}">Show timeline bar</label>
-              </div>
-              <div class="form-check">
-                {{ form.show_graph }}
-                <label class="form-check-label" for="{{ form.show_graph.id_for_label }}">Show response time graph</label>
+              <div class="col-md-3">
+                <label class="form-label">Filter by group</label>
+                <select class="form-select" onchange="filterMonitors(this.value)">
+                  <option value="">All groups</option>
+                  {% for g in groups %}<option value="{{ g }}">{{ g }}</option>{% endfor %}
+                </select>
+                <div class="form-text text-muted">Only selects monitors from this group.</div>
               </div>
             </div>
 
-            <h6 class="mt-4 mb-3">Select which monitors to display</h6>
+            <h6 class="mt-3 mb-2">Monitors on this page</h6>
             {{ formset.management_form }}
             <div id="monitor-forms">
               {% for f in formset %}
               <div class="border rounded p-2 mb-2 monitor-form">
                 {{ f.id }}
                 <div class="row g-2 align-items-center">
-                  <div class="col-4">
-                    <label class="form-label small mb-0">Monitor</label>
+                  <div class="col-5">
                     {{ f.monitor }}
+                    {% for e in f.monitor.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
                   </div>
-                  <div class="col-4">
-                    <label class="form-label small mb-0">Display name (optional)</label>
+                  <div class="col-3">
                     {{ f.display_name }}
                   </div>
                   <div class="col-2">
-                    <div class="form-check mt-4">
+                    <div class="form-check mt-1">
                       {{ f.show_on_page }}
                       <label class="form-check-label" for="{{ f.show_on_page.id_for_label }}">Show</label>
                     </div>
                   </div>
                   <div class="col-2 text-end">
                     {% if f.DELETE %}
-                    <div class="form-check mt-4">
+                    <div class="form-check mt-1">
                       {{ f.DELETE }}
-                      <label class="form-check-label text-danger" for="{{ f.DELETE.id_for_label }}">Delete</label>
+                      <label class="form-check-label text-danger" for="{{ f.DELETE.id_for_label }}">Remove</label>
                     </div>
                     {% endif %}
                   </div>
@@ -288,17 +302,67 @@ function verifyDomain() {
 }
 
 let monIdx = {{ formset.total_form_count }};
-const emptyForm = `{{ formset.empty_form.as_p|escapejs }}`;
-function addMonitorRow() {
-  const container = document.getElementById('monitor-forms');
-  const div = document.createElement('div');
-  div.className = 'border rounded p-2 mb-2 monitor-form';
-  div.innerHTML = emptyForm.replace(/__prefix__/g, monIdx);
-  container.appendChild(div);
-  monIdx++;
-  document.querySelector('#id_monitors-TOTAL_FORMS').value = monIdx;
+const ALL_OPTIONS = [];
+document.querySelectorAll('#monitor-forms select').forEach(sel => {
+  [...sel.options].forEach(o => ALL_OPTIONS.push({ sel, value: o.value, label: o.label }));
+});
+
+function rowTemplate(i) {
+  return `
+    <div class="border rounded p-2 mb-2 monitor-form">
+      <div class="row g-2 align-items-center">
+        <div class="col-5">
+          <select name="monitors-${i}-monitor" class="form-select" id="id_monitors-${i}-monitor"></select>
+        </div>
+        <div class="col-3">
+          <input type="text" name="monitors-${i}-display_name" class="form-control" placeholder="Optional" id="id_monitors-${i}-display_name" maxlength="200">
+        </div>
+        <div class="col-2">
+          <div class="form-check mt-1">
+            <input type="checkbox" name="monitors-${i}-show_on_page" class="form-check-input" id="id_monitors-${i}-show_on_page" checked>
+            <label class="form-check-label" for="id_monitors-${i}-show_on_page">Show</label>
+          </div>
+        </div>
+        <div class="col-2 text-end">
+          <button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.monitor-form').remove(); syncCount()">&times;</button>
+        </div>
+      </div>
+    </div>`;
 }
 
-document.addEventListener('DOMContentLoaded', updateDns);
+function syncCount() {
+  const n = document.querySelectorAll('#monitor-forms .monitor-form').length;
+  document.querySelector('#id_monitors-TOTAL_FORMS').value = n;
+}
+
+function addMonitorRow() {
+  const container = document.getElementById('monitor-forms');
+  const i = monIdx++;
+  container.insertAdjacentHTML('beforeend', rowTemplate(i));
+  const sel = container.querySelector('select[name="monitors-' + i + '-monitor"]');
+  ALL_OPTIONS.forEach(o => {
+    const opt = new Option(o.label, o.value);
+    sel.appendChild(opt);
+  });
+  if (currentGroup) filterMonitors(currentGroup);
+  syncCount();
+}
+
+let currentGroup = '';
+function filterMonitors(group) {
+  currentGroup = group;
+  document.querySelectorAll('#monitor-forms select').forEach(sel => {
+    if (!sel.value) sel.selectedIndex = -1;
+    [...sel.options].forEach(o => {
+      const show = !group || o.label.indexOf('[' + group + ']') === 0;
+      o.hidden = !show;
+    });
+  });
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  updateDns();
+  syncCount();
+});
 </script>
 {% endblock %}

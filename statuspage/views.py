@@ -14,7 +14,7 @@ from django_ratelimit.decorators import ratelimit
 import dns.resolver
 from urllib.parse import urlparse
 
-from heartbeat.models import HeartBeat as Heartbeat, Incident
+from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor
 from .models import StatusPage, StatusPageIncident
 from .forms import StatusPageForm, StatusPageCreateForm, StatusPageMonitorFormSet
 from .utils import build_timeline
@@ -57,6 +57,13 @@ def statuspage_create(request):
 @login_required
 def statuspage_edit(request, pk):
     page = get_object_or_404(StatusPage, pk=pk, user=request.user)
+    groups = list(
+        Monitor.objects.filter(user=request.user)
+        .exclude(group="")
+        .values_list("group", flat=True)
+        .distinct()
+        .order_by("group")
+    )
     if request.method == 'POST':
         form = StatusPageForm(request.POST, instance=page)
         formset = StatusPageMonitorFormSet(request.POST, instance=page, user=request.user)
@@ -78,6 +85,7 @@ def statuspage_edit(request, pk):
         'form': form,
         'formset': formset,
         'page': page,
+        'groups': groups,
         'site_url': settings.SITE_URL.rstrip('/'),
         'status_page_domain': settings.STATUS_PAGE_DOMAIN,
         'verification_prefix': settings.VERIFICATION_PREFIX,

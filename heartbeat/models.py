@@ -59,6 +59,9 @@ class Monitor(models.Model):
             models.Index(fields=["user"]),
         ]
 
+    def __str__(self):
+        return self.name
+
 
 
 

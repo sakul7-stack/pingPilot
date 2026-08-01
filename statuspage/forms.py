@@ -13,13 +13,26 @@ class StatusPageForm(forms.ModelForm):
                     'created_at', 'updated_at', 'domain_claimed_at',
                     'dns_instructions']
         widgets = {
-            'description': forms.Textarea(attrs={'rows': 3}),
-            'header_color': forms.TextInput(attrs={'type': 'color'}),
-            'accent_color': forms.TextInput(attrs={'type': 'color'}),
-            'access_password': forms.PasswordInput(attrs={'autocomplete': 'new-password'}),
-            'footer_text': forms.Textarea(attrs={'rows': 2}),
-            'logo_url': forms.URLInput(attrs={'autocomplete': 'off', 'placeholder': 'https://example.com/logo.png'}),
-            'favicon_url': forms.URLInput(attrs={'autocomplete': 'off', 'placeholder': 'https://example.com/favicon.ico'}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. My Company Status'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'logo_url': forms.URLInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'https://example.com/logo.png'}),
+            'favicon_url': forms.URLInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'https://example.com/favicon.ico'}),
+            'theme': forms.Select(attrs={'class': 'form-select'}),
+            'layout': forms.Select(attrs={'class': 'form-select'}),
+            'sort_order': forms.Select(attrs={'class': 'form-select'}),
+            'show_uptime': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_response_time': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_incidents': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_timeline': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'show_graph': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'header_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
+            'accent_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
+            'custom_domain': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'status.yourdomain.com'}),
+            'meta_description': forms.TextInput(attrs={'class': 'form-control'}),
+            'footer_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'password_protected': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'access_password': forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
         }
 
 
@@ -37,13 +50,27 @@ class StatusPageMonitorForm(forms.ModelForm):
     class Meta:
         model = StatusPageMonitor
         fields = ['monitor', 'display_name', 'show_on_page']
+        widgets = {
+            'display_name': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Optional'}),
+            'show_on_page': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+        }
 
     def __init__(self, *args, **kwargs):
         user = kwargs.pop('user', None)
         status_page = kwargs.pop('status_page', None)
         super().__init__(*args, **kwargs)
         if user:
-            self.fields['monitor'].queryset = user.monitor_set.all()
+            monitors = user.monitor_set.all().order_by('group', 'name')
+            self.fields['monitor'].queryset = monitors
+            self.fields['monitor'].choices = [
+                (mon.pk, self._monitor_label(mon)) for mon in monitors
+            ]
+
+    @staticmethod
+    def _monitor_label(mon):
+        if mon.group:
+            return f"[{mon.group}] {mon.name}"
+        return mon.name
 
 
 class BaseStatusPageMonitorFormSet(BaseInlineFormSet):
@@ -62,6 +89,6 @@ StatusPageMonitorFormSet = inlineformset_factory(
     StatusPage, StatusPageMonitor,
     form=StatusPageMonitorForm,
     formset=BaseStatusPageMonitorFormSet,
-    extra=5,
+    extra=0,
     can_delete=True,
 )
