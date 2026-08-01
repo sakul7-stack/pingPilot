@@ -41,13 +41,6 @@
               {% else %}
                 <span class="badge bg-success">Live</span>
               {% endif %}
-              {% if p.custom_domain %}
-                {% if p.domain_verified %}
-                  <span class="badge bg-success">Domain ✓</span>
-                {% else %}
-                  <span class="badge bg-danger">Domain unverified</span>
-                {% endif %}
-              {% endif %}
             </td>
             <td>{{ p.get_theme_display }}</td>
             <td>{{ p.view_count }}</td>

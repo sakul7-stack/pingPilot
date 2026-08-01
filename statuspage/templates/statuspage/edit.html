@@ -2,13 +2,6 @@
 
 {% block content %}
 <div class="container mt-4">
-  <style>
-    .dns-box { border: 1px solid var(--pp-border); border-radius: 6px; padding: 8px 12px; background: rgba(255,255,255,0.03); }
-    .dns-box table { table-layout: fixed; }
-    .dns-box td { vertical-align: middle; color: var(--pp-text); }
-    .dns-label { width: 64px; color: var(--pp-muted); font-weight: 600; }
-    .btn-copy { font-size: 12px; padding: 1px 8px; }
-  </style>
   <nav aria-label="breadcrumb">
     <ol class="breadcrumb">
       <li class="breadcrumb-item"><a href="{% url 'statuspage:list' %}">Status Pages</a></li>
@@ -41,7 +34,6 @@
     <li class="nav-item"><button class="nav-link {% if active_tab == 'general' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-general">General</button></li>
     <li class="nav-item"><button class="nav-link {% if active_tab == 'monitors' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-monitors">Monitors</button></li>
     <li class="nav-item"><button class="nav-link {% if active_tab == 'theme' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-theme">Theme</button></li>
-    <li class="nav-item"><button class="nav-link {% if active_tab == 'domain' %}active{% endif %}" data-bs-toggle="tab" data-bs-target="#tab-domain">Domain</button></li>
   </ul>
 
   <form method="post">
@@ -209,97 +201,10 @@
         </div>
       </div>
 
-      <div class="tab-pane fade {% if active_tab == 'domain' %}show active{% endif %}" id="tab-domain">
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="mb-3">
-              <label class="form-label">{{ form.custom_domain.label }}</label>
-              {{ form.custom_domain }}
-              {% for e in form.custom_domain.errors %}<div class="text-danger small">{{ e }}</div>{% endfor %}
-              <div class="form-text text-muted">Optional. Use your own domain like <code>status.example.com</code>.</div>
-            </div>
-
-            <div class="alert" id="dns-instructions" style="font-size:14px; background: #0B1220; border: 1px solid var(--pp-border); color: var(--pp-text);">
-              <strong>How to set up your domain — 4 steps</strong>
-
-              <div class="mt-2"><strong>Step 1:</strong> Save this page, then open your DNS provider (e.g. Cloudflare).</div>
-
-              <div class="mt-3"><strong>Step 2:</strong> Add a <strong>CNAME</strong> record to point traffic here:</div>
-              <div class="mt-2 dns-box">
-                <table class="table table-sm table-borderless mb-0">
-                  <tr>
-                    <td class="dns-label">Type</td>
-                    <td><code>CNAME</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('dns-type')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">Name</td>
-                    <td><code id="dns-name" style="user-select:all;">{{ page.custom_domain|default:"status.example.com" }}</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('dns-name')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">Target</td>
-                    <td><code id="dns-target" style="user-select:all;">{{ status_page_domain|default:"your-status-domain.com" }}</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('dns-target')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">Proxy</td>
-                    <td colspan="2"><strong>DNS only</strong> (turn off Cloudflare's proxy / orange cloud)</td>
-                  </tr>
-                </table>
-              </div>
-
-              <div class="mt-3"><strong>Step 3:</strong> Add a <strong>TXT</strong> record to prove you own the domain. Copy the <strong>Value</strong> exactly:</div>
-              <div class="mt-2 dns-box">
-                <table class="table table-sm table-borderless mb-0">
-                  <tr>
-                    <td class="dns-label">Type</td>
-                    <td><code>TXT</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('txt-type')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">Name</td>
-                    <td><code id="txt-name" style="user-select:all;">{{ verification_prefix }}.{{ page.custom_domain|default:"status.example.com" }}</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('txt-name')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">Value</td>
-                    <td><code id="txt-value" style="user-select:all; word-break:break-all;">{{ page.domain_verification_token }}</code></td>
-                    <td class="text-end"><button type="button" class="btn btn-sm btn-outline-primary btn-copy" onclick="copyText('txt-value')">Copy</button></td>
-                  </tr>
-                  <tr>
-                    <td class="dns-label">TTL</td>
-                    <td colspan="2"><code>300</code> (or <code>Auto</code> — either works for verification)</td>
-                  </tr>
-                </table>
-              </div>
-              <div class="mt-2 small">
-                Note: the <strong>Name</strong> must match exactly. If your DNS provider asks for just the
-                subdomain name, enter only <code id="txt-subname">{{ verification_prefix }}</code>.
-              </div>
-
-              <div class="mt-3"><strong>Step 4:</strong> Wait 1–5 minutes for DNS to update, then click
-                <strong>Verify Domain</strong> below.</div>
-            </div>
-
-            {% if page.custom_domain %}
-            <div class="d-flex gap-2 flex-wrap">
-              <button type="button" class="btn btn-outline-primary" onclick="verifyDomain()" id="verify-btn">Verify Domain</button>
-              <button type="button" class="btn btn-outline-secondary" onclick="copyDns()">Copy DNS Config</button>
-              <span id="verify-result" class="align-self-center"></span>
-            </div>
-            {% else %}
-            <div class="text-muted small">Save the page with a custom domain to enable verification.</div>
-            {% endif %}
-
-            <div class="mt-4">
-              <h6>Links</h6>
-              <div>Public URL: <a href="{{ page.public_url }}" target="_blank" class="text-break">{{ page.public_url }}</a></div>
-              {% if page.custom_url %}
-              <div>Custom URL: <a href="{{ page.custom_url }}" target="_blank" class="text-break">{{ page.custom_url }}</a></div>
-              {% endif %}
-            </div>
-          </div>
+      <div class="card mb-4">
+        <div class="card-body">
+          <h6>Public URL</h6>
+          <div>Public URL: <a href="{{ page.public_url }}" target="_blank" class="text-break">{{ page.public_url }}</a></div>
         </div>
       </div>
     </div>
@@ -314,73 +219,6 @@
 
 {% block extra_js %}
 <script>
-function copyText(id) {
-  const el = document.getElementById(id);
-  const text = (el.textContent || '').trim();
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = el.closest('tr').querySelector('.btn-copy');
-      if (btn) { btn.textContent = 'Copied'; setTimeout(() => btn.textContent = 'Copy', 1200); }
-    });
-  } else {
-    const ta = document.createElement('textarea');
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand('copy');
-    document.body.removeChild(ta);
-  }
-}
-
-function updateDns() {
-  const domain = document.querySelector('input[name="custom_domain"]').value.trim();
-  if (domain) {
-    document.getElementById('dns-name').textContent = domain;
-    document.getElementById('txt-name').textContent = '{{ verification_prefix }}.' + domain;
-  }
-}document.querySelector('input[name="custom_domain"]').addEventListener('input', updateDns);
-
-function copyDns() {
-  const domain = document.querySelector('input[name="custom_domain"]').value.trim();
-  const token = '{{ page.domain_verification_token }}';
-  const text = [
-    'CNAME Record:',
-    '  Type: CNAME',
-    '  Name: ' + (domain || 'status.example.com'),
-    '  Target: {{ status_page_domain|default:"your-status-domain.com" }}',
-    '  Proxy: DNS only',
-    '',
-    'TXT Record (verification):',
-    '  Type: TXT',
-    '  Name: ' + ('{{ verification_prefix }}.' + (domain || 'status.example.com')),
-    '  Value: ' + token,
-    '  TTL: 300'
-  ].join('\n');
-  navigator.clipboard.writeText(text).then(() => alert('DNS config copied!'));
-}
-
-function verifyDomain() {
-  const btn = document.getElementById('verify-btn');
-  const result = document.getElementById('verify-result');
-  btn.disabled = true;
-  result.textContent = 'Checking...';
-  fetch('{% url "statuspage:verify_domain" page.pk %}', {
-    method: 'POST',
-    headers: { 'X-CSRFToken': '{{ csrf_token }}' }
-  })
-  .then(r => r.json())
-  .then(data => {
-    if (data.verified) {
-      result.innerHTML = '<span class="text-success">Verified!</span>';
-      location.reload();
-    } else {
-      result.innerHTML = '<span class="text-danger">' + (data.error || 'Verification failed') + '</span>';
-    }
-  })
-  .catch(() => result.innerHTML = '<span class="text-danger">Request failed</span>')
-  .finally(() => btn.disabled = false);
-}
-
 let monIdx = {{ formset.total_form_count }};
 const MONITOR_OPTIONS = {{ monitor_options|safe }};
 const ALL_OPTIONS = [];
@@ -442,7 +280,6 @@ function filterMonitors(group) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-  updateDns();
   syncCount();
   document.querySelectorAll('#editTabs button[data-bs-toggle="tab"]').forEach(btn => {
     btn.addEventListener('shown.bs.tab', () => {

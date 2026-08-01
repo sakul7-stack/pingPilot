@@ -106,8 +106,6 @@ def statuspage_edit(request, pk):
         'monitor_options': monitor_options,
         'active_tab': request.GET.get('tab', 'general'),
         'site_url': settings.SITE_URL.rstrip('/'),
-        'status_page_domain': settings.STATUS_PAGE_DOMAIN,
-        'verification_prefix': settings.VERIFICATION_PREFIX,
     })
 
 

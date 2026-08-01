@@ -8,7 +8,7 @@ from .models import StatusPage, StatusPageMonitor
 class StatusPageForm(forms.ModelForm):
     class Meta:
         model = StatusPage
-        exclude = ['user', 'slug', 'domain_verified',
+        exclude = ['user', 'slug', 'custom_domain', 'domain_verified',
                     'domain_verification_token', 'view_count',
                     'created_at', 'updated_at', 'domain_claimed_at',
                     'dns_instructions']
@@ -27,7 +27,6 @@ class StatusPageForm(forms.ModelForm):
             'show_graph': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'header_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
-            'custom_domain': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'status.yourdomain.com'}),
             'meta_description': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
             'footer_text': forms.Textarea(attrs={'class': 'form-control', 'autocomplete': 'off', 'rows': 2}),
             'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
