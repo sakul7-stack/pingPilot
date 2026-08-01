@@ -81,11 +81,21 @@ def statuspage_edit(request, pk):
     else:
         form = StatusPageForm(instance=page)
         formset = StatusPageMonitorFormSet(instance=page, user=request.user)
+    monitors = list(
+        Monitor.objects.filter(user=request.user)
+        .order_by("group", "name")
+        .values_list("id", "group", "name")
+    )
+    monitor_options = [
+        {"value": mid, "label": f"[{g}] {n}" if g else n}
+        for mid, g, n in monitors
+    ]
     return render(request, 'statuspage/edit.html', {
         'form': form,
         'formset': formset,
         'page': page,
         'groups': groups,
+        'monitor_options': monitor_options,
         'site_url': settings.SITE_URL.rstrip('/'),
         'status_page_domain': settings.STATUS_PAGE_DOMAIN,
         'verification_prefix': settings.VERIFICATION_PREFIX,

@@ -84,7 +84,7 @@
             </div>
             <div class="mb-3" id="access-password-field">
               <label class="form-label">Access Password</label>
-              <input type="password" name="access_password" class="form-control" placeholder="Leave blank to keep current">
+              <input type="password" name="access_password" class="form-control" autocomplete="new-password" placeholder="Leave blank to keep current">
             </div>
           </div>
         </div>
@@ -302,6 +302,7 @@ function verifyDomain() {
 }
 
 let monIdx = {{ formset.total_form_count }};
+const MONITOR_OPTIONS = {{ monitor_options|safe }};
 const ALL_OPTIONS = [];
 document.querySelectorAll('#monitor-forms select').forEach(sel => {
   [...sel.options].forEach(o => ALL_OPTIONS.push({ sel, value: o.value, label: o.label }));
@@ -340,7 +341,7 @@ function addMonitorRow() {
   const i = monIdx++;
   container.insertAdjacentHTML('beforeend', rowTemplate(i));
   const sel = container.querySelector('select[name="monitors-' + i + '-monitor"]');
-  ALL_OPTIONS.forEach(o => {
+  MONITOR_OPTIONS.forEach(o => {
     const opt = new Option(o.label, o.value);
     sel.appendChild(opt);
   });

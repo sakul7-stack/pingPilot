@@ -13,8 +13,8 @@ class StatusPageForm(forms.ModelForm):
                     'created_at', 'updated_at', 'domain_claimed_at',
                     'dns_instructions']
         widgets = {
-            'title': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'e.g. My Company Status'}),
-            'description': forms.Textarea(attrs={'class': 'form-control', 'rows': 3}),
+            'title': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'e.g. My Company Status'}),
+            'description': forms.Textarea(attrs={'class': 'form-control', 'autocomplete': 'off', 'rows': 3}),
             'logo_url': forms.URLInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'https://example.com/logo.png'}),
             'favicon_url': forms.URLInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'https://example.com/favicon.ico'}),
             'theme': forms.Select(attrs={'class': 'form-select'}),
@@ -28,8 +28,8 @@ class StatusPageForm(forms.ModelForm):
             'header_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'accent_color': forms.TextInput(attrs={'class': 'form-control form-control-color', 'type': 'color'}),
             'custom_domain': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off', 'placeholder': 'status.yourdomain.com'}),
-            'meta_description': forms.TextInput(attrs={'class': 'form-control'}),
-            'footer_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
+            'meta_description': forms.TextInput(attrs={'class': 'form-control', 'autocomplete': 'off'}),
+            'footer_text': forms.Textarea(attrs={'class': 'form-control', 'autocomplete': 'off', 'rows': 2}),
             'is_published': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'password_protected': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'access_password': forms.PasswordInput(attrs={'class': 'form-control', 'autocomplete': 'new-password'}),
