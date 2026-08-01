@@ -57,6 +57,9 @@ def statuspage_create(request):
 @login_required
 def statuspage_edit(request, pk):
     page = get_object_or_404(StatusPage, pk=pk, user=request.user)
+    if not page.domain_verification_token:
+        page.domain_verification_token = get_random_string(64)
+        page.save(update_fields=["domain_verification_token"])
     groups = list(
         Monitor.objects.filter(user=request.user)
         .exclude(group="")

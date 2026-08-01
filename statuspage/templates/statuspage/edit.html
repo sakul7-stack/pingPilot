@@ -219,7 +219,7 @@
               <hr>
               <strong>TXT Record (verification)</strong>
               <div class="mt-2">Name: <code id="txt-name">_{{ verification_prefix }}.status.example.com</code></div>
-              <div>Value: <code id="txt-value">token</code></div>
+              <div>Value: <code id="txt-value" style="user-select:all;">{{ page.domain_verification_token }}</code></div>
               <div>TTL: <code>300</code></div>
             </div>
 
@@ -266,6 +266,7 @@ document.querySelector('input[name="custom_domain"]').addEventListener('input', 
 
 function copyDns() {
   const domain = document.querySelector('input[name="custom_domain"]').value.trim();
+  const token = '{{ page.domain_verification_token }}';
   const text = [
     'CNAME Record:',
     '  Name: ' + (domain || 'status.example.com'),
@@ -273,7 +274,7 @@ function copyDns() {
     '',
     'TXT Record (verification):',
     '  Name: ' + ('_{{ verification_prefix }}.' + (domain || 'status.example.com')),
-    '  Value: (see below)',
+    '  Value: ' + token,
     '  TTL: 300'
   ].join('\n');
   navigator.clipboard.writeText(text).then(() => alert('DNS config copied!'));
