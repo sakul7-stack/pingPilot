@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import check_password
 from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse
 from django.contrib import messages
 from django.utils.crypto import get_random_string
 from django.conf import settings
@@ -80,7 +81,11 @@ def statuspage_edit(request, pk):
                 deleted.delete()
             formset.save_m2m()
             messages.success(request, 'Status page updated!')
-            return redirect('statuspage:edit', pk=page.pk)
+            tab = request.POST.get('active_tab', 'general')
+            url = reverse('statuspage:edit', kwargs={'pk': page.pk})
+            if tab != 'general':
+                url += f'?tab={tab}'
+            return redirect(url)
     else:
         form = StatusPageForm(instance=page)
         formset = StatusPageMonitorFormSet(instance=page, user=request.user)
@@ -99,6 +104,7 @@ def statuspage_edit(request, pk):
         'page': page,
         'groups': groups,
         'monitor_options': monitor_options,
+        'active_tab': request.GET.get('tab', 'general'),
         'site_url': settings.SITE_URL.rstrip('/'),
         'status_page_domain': settings.STATUS_PAGE_DOMAIN,
         'verification_prefix': settings.VERIFICATION_PREFIX,
