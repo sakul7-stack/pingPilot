@@ -98,8 +98,12 @@ def dashboard(request):
 def create_monitor(request):
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
-        url = request.POST.get("url", "").strip()
         check_type = request.POST.get("check_type", "http")
+        url = (
+            request.POST.get("host", "").strip()
+            if check_type == "tcp"
+            else request.POST.get("url", "").strip()
+        )
         port = request.POST.get("port", "").strip()
         method = request.POST.get("method", "GET")
         expected_status = request.POST.get("expected_status", 200)
@@ -159,8 +163,12 @@ def edit_monitor(request, monitor_id):
     monitor = get_object_or_404(Monitor, pk=monitor_id, user=request.user)
     if request.method == "POST":
         name = request.POST.get("name", "").strip()
-        url = request.POST.get("url", "").strip()
         check_type = request.POST.get("check_type", "http")
+        url = (
+            request.POST.get("host", "").strip()
+            if check_type == "tcp"
+            else request.POST.get("url", "").strip()
+        )
         port = request.POST.get("port", "").strip()
         method = request.POST.get("method", "GET")
         expected_status = request.POST.get("expected_status", 200)

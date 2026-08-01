@@ -36,7 +36,7 @@
           <div class="row">
             <div class="col-7">
               <label class="form-label">Host</label>
-              <input type="text" name="url" class="form-control" value="{{ monitor.url }}">
+              <input type="text" name="host" class="form-control" value="{{ monitor.url }}">
             </div>
             <div class="col-5">
               <label class="form-label">Port</label>
@@ -208,7 +208,7 @@ function toggleEditType(v) {
   document.getElementById('editHttpFields').style.display = isTcp ? 'none' : '';
   document.getElementById('editKeywordField').style.display = isTcp ? 'none' : '';
   document.getElementById('editHeaderField').style.display = isTcp ? 'none' : '';
-  var tcpInput = document.querySelector('#editTcpFields input[name="url"]');
+  var tcpInput = document.querySelector('#editTcpFields input[name="host"]');
   var httpInput = document.querySelector('#editHttpUrlField input[name="url"]');
   if (isTcp) {
     httpInput.required = false;

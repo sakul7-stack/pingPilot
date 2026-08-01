@@ -138,7 +138,7 @@
           <div class="row">
             <div class="col-7">
               <label class="form-label">Host</label>
-              <input type="text" name="url" class="form-control" placeholder="e.g. db.example.com">
+              <input type="text" name="host" class="form-control" placeholder="e.g. db.example.com">
             </div>
             <div class="col-5">
               <label class="form-label">Port</label>
@@ -230,7 +230,7 @@ function toggleAddType(v) {
   document.getElementById('addHttpFields').style.display = isTcp ? 'none' : '';
   document.getElementById('addKeywordField').style.display = isTcp ? 'none' : '';
   document.getElementById('addHeaderField').style.display = isTcp ? 'none' : '';
-  var urlInput = document.querySelector('#addTcpFields input[name="url"]');
+  var urlInput = document.querySelector('#addTcpFields input[name="host"]');
   var httpInput = document.querySelector('#addHttpUrlField input[name="url"]');
   if (isTcp) {
     httpInput.required = false;
