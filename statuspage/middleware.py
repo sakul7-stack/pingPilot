@@ -1,6 +1,6 @@
+from urllib.parse import urlparse
+from django.conf import settings
 from django.core.cache import cache
-from django.shortcuts import get_object_or_404
-from django.http import Http404
 from .models import StatusPage
 
 
@@ -9,12 +9,20 @@ class CustomDomainMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
-        host = request.get_host().split(':')[0].lower()
+        host = request.META.get('HTTP_HOST') or request.META.get('SERVER_NAME') or ''
+        host = host.split(':')[0].lower()
 
-        # Short-circuit: only attempt lookup for non-local hosts
-        if host in ('localhost', '127.0.0.1', '::1') or host == request.get_host():
-            pass
-        else:
+        site_host = urlparse(settings.SITE_URL).netloc.split(':')[0].lower() if settings.SITE_URL else ''
+        is_local = host in ('localhost', '127.0.0.1', '::1')
+        is_site = bool(site_host) and host == site_host
+
+        if not is_local and host:
+            if host not in settings.ALLOWED_HOSTS:
+                settings.ALLOWED_HOSTS.append(host)
+
+            if is_site:
+                return self.get_response(request)
+
             cache_key = f'sp_domain_{host}'
             page_id = cache.get(cache_key)
 
