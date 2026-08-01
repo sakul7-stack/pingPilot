@@ -212,15 +212,32 @@
             </div>
 
             <div class="alert alert-info" id="dns-instructions" style="font-size:14px;">
-              <strong>DNS Configuration</strong>
-              <div class="mt-2">Record Type: <code>CNAME</code></div>
-              <div>Name: <code id="dns-name">status.example.com</code></div>
-              <div>Target: <code>{{ status_page_domain|default:"your-status-domain.com" }}</code></div>
-              <hr>
-              <strong>TXT Record (verification)</strong>
-              <div class="mt-2">Name: <code id="txt-name">_{{ verification_prefix }}.status.example.com</code></div>
-              <div>Value: <code id="txt-value" style="user-select:all;">{{ page.domain_verification_token }}</code></div>
-              <div>TTL: <code>300</code></div>
+              <strong>How to set up your domain — 4 steps</strong>
+
+              <div class="mt-2"><strong>Step 1:</strong> Save this page (button at the bottom), then open your DNS provider (e.g. Cloudflare).</div>
+
+              <div class="mt-2"><strong>Step 2:</strong> Add this <strong>CNAME</strong> record to point traffic here:</div>
+              <div class="mt-1" style="padding-left:16px;">
+                Type: <code>CNAME</code> &nbsp;·&nbsp;
+                Name: <code id="dns-name">{{ page.custom_domain|default:"status.example.com" }}</code> &nbsp;·&nbsp;
+                Target: <code>{{ status_page_domain|default:"your-status-domain.com" }}</code>
+              </div>
+
+              <div class="mt-2"><strong>Step 3:</strong> Add this <strong>TXT</strong> record to prove you own the domain (copy the Value exactly):</div>
+              <div class="mt-1" style="padding-left:16px;">
+                Type: <code>TXT</code> &nbsp;·&nbsp;
+                Name: <code id="txt-name" style="user-select:all;">{{ verification_prefix }}.{{ page.custom_domain|default:"status.example.com" }}</code> &nbsp;·&nbsp;
+                Value: <code id="txt-value" style="user-select:all;">{{ page.domain_verification_token }}</code> &nbsp;·&nbsp;
+                TTL: <code>300</code>
+              </div>
+              <div class="mt-1 small" style="padding-left:16px;">
+                ⚠️ Note: the <strong>Name</strong> must match exactly — for example
+                <code>{{ verification_prefix }}.{{ page.custom_domain|default:"status.example.com" }}</code>. When your DNS provider asks for
+                just the subdomain name, enter only <code id="txt-subname">{{ verification_prefix }}</code>.
+              </div>
+
+              <div class="mt-2"><strong>Step 4:</strong> Wait 1–5 minutes for DNS to update, then click
+                <strong>Verify Domain</strong> below.</div>
             </div>
 
             {% if page.custom_domain %}
@@ -259,10 +276,9 @@ function updateDns() {
   const domain = document.querySelector('input[name="custom_domain"]').value.trim();
   if (domain) {
     document.getElementById('dns-name').textContent = domain;
-    document.getElementById('txt-name').textContent = '_{{ verification_prefix }}.' + domain;
+    document.getElementById('txt-name').textContent = '{{ verification_prefix }}.' + domain;
   }
-}
-document.querySelector('input[name="custom_domain"]').addEventListener('input', updateDns);
+}document.querySelector('input[name="custom_domain"]').addEventListener('input', updateDns);
 
 function copyDns() {
   const domain = document.querySelector('input[name="custom_domain"]').value.trim();
@@ -273,7 +289,7 @@ function copyDns() {
     '  Target: {{ status_page_domain|default:"your-status-domain.com" }}',
     '',
     'TXT Record (verification):',
-    '  Name: ' + ('_{{ verification_prefix }}.' + (domain || 'status.example.com')),
+    '  Name: ' + ('{{ verification_prefix }}.' + (domain || 'status.example.com')),
     '  Value: ' + token,
     '  TTL: 300'
   ].join('\n');
