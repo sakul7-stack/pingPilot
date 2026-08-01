@@ -18,7 +18,7 @@ from urllib.parse import urlparse
 from heartbeat.models import HeartBeat as Heartbeat, Incident, Monitor
 from .models import StatusPage, StatusPageIncident
 from .forms import StatusPageForm, StatusPageCreateForm, StatusPageMonitorFormSet
-from .utils import build_timeline
+from .utils import build_timeline, resolve_txt_authoritative
 
 
 # ---------------------------------------------------------------------------
@@ -266,13 +266,11 @@ def verify_domain(request, pk):
             return JsonResponse({'verified': False, 'error': 'No domain set'})
 
         try:
-            answers = dns.resolver.resolve(f'{verification_prefix}.{domain}', 'TXT')
-            for rdata in answers:
-                txt_value = ''.join(rdata.strings)
-                if page.domain_verification_token in txt_value:
-                    page.domain_verified = True
-                    page.save()
-                    return JsonResponse({'verified': True})
+            txt_values = resolve_txt_authoritative(f'{verification_prefix}.{domain}')
+            if any(page.domain_verification_token in tv for tv in txt_values):
+                page.domain_verified = True
+                page.save()
+                return JsonResponse({'verified': True})
 
             return JsonResponse({
                 'verified': False,

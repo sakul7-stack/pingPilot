@@ -3,6 +3,47 @@ from django.utils import timezone
 from django.db.models import Count, Avg, Q
 from heartbeat.models import HeartBeat, Incident
 
+import dns.resolver
+import dns.rdatatype
+import dns.rdataclass
+
+
+def _txt_values(answers):
+    values = []
+    for r in answers:
+        val = b''.join(r.strings)
+        values.append(val.decode('utf-8', errors='replace') if isinstance(val, bytes) else val)
+    return values
+
+
+def resolve_txt_authoritative(fqdn):
+    """Query the authoritative nameservers directly to bypass stale
+    recursive-resolver caches (e.g. a cached NXDOMAIN). Falls back to
+    the default recursive resolution if anything fails."""
+    nameservers = []
+    try:
+        ns_answers = dns.resolver.resolve(fqdn, 'NS')
+        ns_names = [str(r.target).rstrip('.') for r in ns_answers]
+    except Exception:
+        ns_names = []
+    for ns in ns_names:
+        try:
+            for a in dns.resolver.resolve(ns, 'A'):
+                nameservers.append(a.address)
+        except Exception:
+            continue
+    try:
+        if nameservers:
+            res = dns.resolver.Resolver()
+            res.nameservers = nameservers
+            res.lifetime = 10
+            answers = res.resolve(fqdn, 'TXT')
+            return _txt_values(answers)
+    except Exception:
+        pass
+    answers = dns.resolver.resolve(fqdn, 'TXT')
+    return _txt_values(answers)
+
 
 def build_timeline(monitor, segments=30):
     now = timezone.now()

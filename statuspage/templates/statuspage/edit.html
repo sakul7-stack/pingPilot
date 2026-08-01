@@ -3,10 +3,10 @@
 {% block content %}
 <div class="container mt-4">
   <style>
-    .dns-box { border: 1px solid #c6d8ea; border-radius: 6px; padding: 8px 12px; background: #f4f8fc; }
+    .dns-box { border: 1px solid var(--pp-border); border-radius: 6px; padding: 8px 12px; background: rgba(255,255,255,0.03); }
     .dns-box table { table-layout: fixed; }
-    .dns-box td { vertical-align: middle; }
-    .dns-label { width: 64px; color: #5b6b7b; font-weight: 600; }
+    .dns-box td { vertical-align: middle; color: var(--pp-text); }
+    .dns-label { width: 64px; color: var(--pp-muted); font-weight: 600; }
     .btn-copy { font-size: 12px; padding: 1px 8px; }
   </style>
   <nav aria-label="breadcrumb">
@@ -219,7 +219,7 @@
               <div class="form-text text-muted">Optional. Use your own domain like <code>status.example.com</code>.</div>
             </div>
 
-            <div class="alert alert-info" id="dns-instructions" style="font-size:14px;">
+            <div class="alert" id="dns-instructions" style="font-size:14px; background: #0B1220; border: 1px solid var(--pp-border); color: var(--pp-text);">
               <strong>How to set up your domain — 4 steps</strong>
 
               <div class="mt-2"><strong>Step 1:</strong> Save this page, then open your DNS provider (e.g. Cloudflare).</div>
@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', function() {
   syncCount();
   document.querySelectorAll('#editTabs button[data-bs-toggle="tab"]').forEach(btn => {
     btn.addEventListener('shown.bs.tab', () => {
-      const tab = btn.dataset.bsTarget.replace('#', '');
+      const tab = btn.dataset.bsTarget.replace('#tab-', '');
       document.getElementById('active-tab-input').value = tab;
     });
   });
