@@ -58,9 +58,11 @@
     "id": 1,
     "name": "My Website",
     "url": "https://example.com",
+    "check_type": "http",
+    "port": null,
     "method": "GET",
     "expected_status": 200,
-    "check_interval_seconds": 60,
+    "check_interval_seconds": 300,
     "last_status": "UP",
     "last_checked_at": "2026-07-30T12:00:00Z",
     "is_active": true,
@@ -76,7 +78,9 @@
               <tr><td><code>id</code></td><td>int</td><td>Unique monitor ID</td></tr>
               <tr><td><code>name</code></td><td>string</td><td>Monitor display name</td></tr>
               <tr><td><code>url</code></td><td>string</td><td>Target URL being monitored</td></tr>
-              <tr><td><code>method</code></td><td>string</td><td>HTTP method (GET, POST, etc.)</td></tr>
+              <tr><td><code>check_type</code></td><td>string</td><td>Check type: <code>http</code> or <code>tcp</code></td></tr>
+              <tr><td><code>port</code></td><td>int</td><td>TCP port (null for HTTP checks)</td></tr>
+              <tr><td><code>method</code></td><td>string</td><td>HTTP method (GET or HEAD)</td></tr>
               <tr><td><code>expected_status</code></td><td>int</td><td>Expected HTTP status code</td></tr>
               <tr><td><code>check_interval_seconds</code></td><td>int</td><td>Check interval in seconds</td></tr>
               <tr><td><code>last_status</code></td><td>string</td><td>UP, DOWN, DEGRADED, or null</td></tr>
@@ -105,11 +109,13 @@
   "id": 1,
   "name": "My Website",
   "url": "https://example.com",
+  "check_type": "http",
+  "port": null,
   "method": "GET",
   "expected_status": 200,
   "expected_keyword": "Welcome",
   "timeout": 10,
-  "check_interval_seconds": 60,
+  "check_interval_seconds": 300,
   "last_status": "UP",
   "last_checked_at": "2026-07-30T12:00:00Z",
   "is_active": true,
@@ -124,7 +130,9 @@
               <tr><td><code>id</code></td><td>int</td><td>Unique monitor ID</td></tr>
               <tr><td><code>name</code></td><td>string</td><td>Monitor display name</td></tr>
               <tr><td><code>url</code></td><td>string</td><td>Target URL being monitored</td></tr>
-              <tr><td><code>method</code></td><td>string</td><td>HTTP method</td></tr>
+              <tr><td><code>check_type</code></td><td>string</td><td>Check type: <code>http</code> or <code>tcp</code></td></tr>
+              <tr><td><code>port</code></td><td>int</td><td>TCP port (null for HTTP checks)</td></tr>
+              <tr><td><code>method</code></td><td>string</td><td>HTTP method (GET or HEAD)</td></tr>
               <tr><td><code>expected_status</code></td><td>int</td><td>Expected HTTP status code</td></tr>
               <tr><td><code>expected_keyword</code></td><td>string</td><td>Optional expected keyword in response</td></tr>
               <tr><td><code>timeout</code></td><td>int</td><td>Request timeout in seconds</td></tr>
