@@ -40,7 +40,7 @@
             <th>Name</th>
             <th>URL</th>
             <th>Status</th>
-            {% for p in periods %}<th>{{ p }}d</th>{% endfor %}
+            {% for p in periods %}<th>{% if p == 1 %}24h{% else %}{{ p }}d{% endif %}</th>{% endfor %}
             <th>Interval</th>
             <th>Last Checked</th>
             <th>Actions</th>

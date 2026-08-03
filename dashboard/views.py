@@ -67,7 +67,7 @@ def dashboard(request):
     if active_group:
         monitors = monitors.filter(group=active_group)
 
-    periods = [7, 30, 90]
+    periods = [1, 7, 30, 90]
     monitor_ids = list(monitors.values_list("id", flat=True))
     uptime_map = {mid: {p: None for p in periods} for mid in monitor_ids}
     if monitor_ids:
