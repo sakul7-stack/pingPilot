@@ -85,9 +85,9 @@
               {% endwith %}
             </td>
             {% endfor %}
-            <td>{{ m.check_interval_seconds }}s</td>
-            <td>{% if m.last_checked_at %}{{ m.last_checked_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}{% else %}Never{% endif %}</td>
-            <td>
+            <td class="text-nowrap">{{ m.check_interval_seconds }}s</td>
+            <td class="text-nowrap">{% if m.last_checked_at %}{{ m.last_checked_at|date:"Y-m-d H:i:s" }} {{ active_timezone }}{% else %}Never{% endif %}</td>
+            <td class="text-nowrap">
               <a href="{% url 'edit_monitor' m.id %}" class="btn btn-sm btn-outline-warning">Edit</a>
               <a href="{% url 'toggle_monitor' m.id %}" class="btn btn-sm btn-outline-info">
                 {% if m.is_active %}Pause{% else %}Activate{% endif %}
